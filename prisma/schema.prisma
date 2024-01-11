@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  SPORTS_HEAD
+  DEPT_SPORTS_CC
+}
+
+model User {
+  sis_id             String              @id @default(uuid())
+  userId             String              @unique
+  email              String              @unique
+  name               String
+  password           String
+  refreshToken       String?
+  role               Role                @default(USER)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  rec_status         Boolean             @default(false)
+  cricketPlayerId    String?
+  cricketPlayer      CricketPlayer?      @relation("cricketPlayer", fields: [cricketPlayerId], references: [sis_id])
+  cricket_players    CricketPlayer[]     @relation("playerUser")
+  verification_token VerificationToken[] @relation("verificationToken")
+}
+
+model CricketSchedule {
+  sis_id        String       @id @default(uuid())
+  // matchId       String       @unique
+  match         CricketMatch @relation("scheduleMatches", fields: [sis_id], references: [sis_id])
+  team1Id       String
+  team1         CricketTeam  @relation("team1", fields: [team1Id], references: [sis_id])
+  team2Id       String
+  team2         CricketTeam  @relation("team2", fields: [team2Id], references: [sis_id])
+  dependendency Boolean      @default(false)
+}
+
+model CricketTeam {
+  sis_id    String   @id @default(uuid())
+  // teamId    String   @unique
+  name      String
+  year      String
+  playerIds String[]
+
+  players        CricketPlayer[]   @relation("playerTeam")
+  team2_matches  CricketMatch[]    @relation("team2")
+  team1_matches  CricketMatch[]    @relation("team1")
+  schedule_team1 CricketSchedule[] @relation("team1")
+  schedule_team2 CricketSchedule[] @relation("team2")
+}
+
+model CricketPlayer {
+  sis_id               String         @id @default(uuid())
+  // playerId             String         @unique
+  userId               String
+  user                 User           @relation("playerUser", fields: [userId], references: [userId])
+  isCaptain            Boolean        @default(false)
+  isWicketKeeper       Boolean        @default(false)
+  isAllRounder         Boolean        @default(false)
+  isBatsman            Boolean        @default(false)
+  isBowler             Boolean        @default(false)
+  teamId               String?
+  team                 CricketTeam?   @relation("playerTeam", fields: [teamId], references: [sis_id])
+  matches              CricketMatch[] @relation("playerMatches")
+  user_cricket_players User[]         @relation("cricketPlayer")
+}
+
+model CricketMatch {
+  sis_id           String           @id @default(uuid())
+  // matchId          String           @unique
+  date             DateTime
+  venue            String
+  team1Id          String
+  team1            CricketTeam      @relation("team1", fields: [team1Id], references: [sis_id])
+  team2Id          String
+  team2            CricketTeam      @relation("team2", fields: [team2Id], references: [sis_id])
+  players          CricketPlayer[]  @relation("playerMatches")
+  schedule_matches CricketSchedule? @relation("scheduleMatches")
+}
+
+model VerificationToken {
+  sis_id     String   @id @default(uuid())
+  token      String   @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  expiration DateTime
+  user       User     @relation("verificationToken", fields: [sis_id], references: [userId])
+}
