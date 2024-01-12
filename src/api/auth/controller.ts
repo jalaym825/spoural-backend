@@ -109,6 +109,7 @@ const register = async (req: Request, res: Response) => {
         }
         return res.status(200).json({
             data: {
+                user: newUser,
                 message: "User created successfully",
             }
         });
@@ -237,7 +238,7 @@ const sendVerificationMail = async (req: Request, res: Response) => {
                 }
             });
         }
-        const user = await prisma.user.findFirst({
+        const user:any = await prisma.user.findFirst({
             where: {
                 email: email.toLowerCase(),
             },
@@ -280,6 +281,8 @@ const sendVerificationMail = async (req: Request, res: Response) => {
         }).then((_info) => {
             logger.info(`[/sendVerificationMail] - success - ${user.userId}`);
             logger.debug(`[/sendVerificationMail] - email: ${email}`);
+            delete user.refreshToken;
+            delete user.password;
             return res.status(200).json({
                 data: {
                     user,

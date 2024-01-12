@@ -22,7 +22,7 @@ const getMatches = async (req: Request, res: Response) => {
             orderBy: {
                 date: 'desc'
             },
-            include:{
+            include: {
                 match: {
                     include: {
                         team1: true,
@@ -33,7 +33,11 @@ const getMatches = async (req: Request, res: Response) => {
         });
         logger.info(`[/matches] - ${matches.length} matches found`);
 
-        return res.status(200).json(matches);
+        return res.status(200).json({
+            data: {
+                matches
+            }
+        });
     } catch (error: any) {
         logger.error(`[/matches] - ${error.message}`);
         return res.status(500).json({
@@ -79,7 +83,11 @@ const addMatch = async (req: Request, res: Response) => {
         });
         logger.info(`[/matches] - match schedule added, schedule: ${shcedule.sis_id}`);
 
-        return res.status(200).json({ data: match });
+        return res.status(200).json({
+            data: {
+                match
+            }
+        });
     } catch (error: any) {
         logger.error(`[/matches] - ${error.message}`);
         return res.status(500).json({
