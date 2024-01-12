@@ -8,3 +8,143 @@
 [Jan 11, 2024 11:09 PM] --> [/login] - success - 2609f9c3-91e7-4a47-b74c-03528d0d6c87
 [Jan 11, 2024 11:09 PM] --> [/login] - jalaym825@gmail.com
 [Jan 11, 2024 11:09 PM] --> [/logout] - success - 2609f9c3-91e7-4a47-b74c-03528d0d6c87
+[Jan 12, 2024 4:49 PM] --> [/matches] - 
+Invalid `prisma.cricketSchedule.create()` invocation in
+/Users/jalaymovaliya/SGP-2/src/api/match/controller.ts:54:55
+
+  51     });
+  52 }
+  53 
+→ 54 const shcedule = await prisma.cricketSchedule.create(
+Foreign key constraint failed on the field: `CricketSchedule_team1Id_fkey (index)`
+[Jan 12, 2024 5:08 PM] --> [/team] - 0 teams found
+[Jan 12, 2024 5:33 PM] --> [/matches] - token missing
+[Jan 12, 2024 5:33 PM] --> [/matches] - token: undefined
+[Jan 12, 2024 5:34 PM] --> [/register] - success - 75022de8-6d18-4574-bdc0-1df42419e179
+[Jan 12, 2024 5:34 PM] --> [/register] - email: jalaym825@gmail.com, userId: jalaym825
+[Jan 12, 2024 5:34 PM] --> [/sendVerificationMail] - success - 75022de8-6d18-4574-bdc0-1df42419e179
+[Jan 12, 2024 5:34 PM] --> [/sendVerificationMail] - email: jalaym825@gmail.com
+[Jan 12, 2024 5:34 PM] --> [/verify] - success - jalaym825
+[Jan 12, 2024 5:34 PM] --> [/verify] - userId: jalaym825, token: 78a4f73a17b7706f449bc7a036f510d3d47af906fd04d02e822e86bb48998d0b
+[Jan 12, 2024 5:34 PM] --> [/auth] - token missing
+[Jan 12, 2024 5:34 PM] --> [/auth] - token: undefined
+[Jan 12, 2024 5:34 PM] --> [/login] - success - 75022de8-6d18-4574-bdc0-1df42419e179
+[Jan 12, 2024 5:34 PM] --> [/login] - jalaym825@gmail.com
+[Jan 12, 2024 5:35 PM] --> [/matches] - user: jalaym825 authenticated
+[Jan 12, 2024 5:35 PM] --> [/matches] - user: jalaym825, role: USER
+[Jan 12, 2024 5:35 PM] --> [/matches] - unauthorized access by user: jalaym825
+[Jan 12, 2024 5:35 PM] --> [/matches] - user: jalaym825 authenticated
+[Jan 12, 2024 5:35 PM] --> [/matches] - user: jalaym825, role: SPORTS_HEAD
+[Jan 12, 2024 5:35 PM] --> [/matches] - unauthorized access by user: jalaym825
+[Jan 12, 2024 5:36 PM] --> [/matches] - user: jalaym825 authenticated
+[Jan 12, 2024 5:36 PM] --> [/matches] - user: jalaym825, role: SPORTS_HEAD
+[Jan 12, 2024 5:36 PM] --> [/matches] - user: jalaym825 authorized
+[Jan 12, 2024 5:36 PM] --> [/team] - CSPITCE added
+[Jan 12, 2024 5:36 PM] --> [/matches] - user: jalaym825 authenticated
+[Jan 12, 2024 5:36 PM] --> [/matches] - user: jalaym825, role: SPORTS_HEAD
+[Jan 12, 2024 5:36 PM] --> [/matches] - user: jalaym825 authorized
+[Jan 12, 2024 5:36 PM] --> [/team] - CSPITCSE added
+[Jan 12, 2024 5:37 PM] --> [/matches] - user: jalaym825 authenticated
+[Jan 12, 2024 5:37 PM] --> [/matches] - user: jalaym825, role: SPORTS_HEAD
+[Jan 12, 2024 5:37 PM] --> [/matches] - unauthorized access by user: jalaym825
+[Jan 12, 2024 5:38 PM] --> [/matches] - user: jalaym825 authenticated
+[Jan 12, 2024 5:38 PM] --> [/matches] - user: jalaym825, role: SPORTS_HEAD
+[Jan 12, 2024 5:38 PM] --> [/matches] - user: jalaym825 authorized
+[Jan 12, 2024 5:38 PM] --> [/matches] - 
+Invalid `prisma.cricketSchedule.create()` invocation in
+/Users/jalaymovaliya/SGP-2/src/api/match/controller.ts:52:55
+
+  49     });
+  50 }
+  51 
+→ 52 const shcedule = await prisma.cricketSchedule.create(
+Foreign key constraint failed on the field: `CricketSchedule_sis_id_fkey (index)`
+[Jan 12, 2024 5:43 PM] --> [/matches] - user: jalaym825 authenticated
+[Jan 12, 2024 5:43 PM] --> [/matches] - user: jalaym825, role: SPORTS_HEAD
+[Jan 12, 2024 5:43 PM] --> [/matches] - user: jalaym825 authorized
+[Jan 12, 2024 5:43 PM] --> [/matches] - match added, match: c9090737-38af-4947-adc8-d32d74d1f4b6
+[Jan 12, 2024 5:43 PM] --> [/matches] - match schedule added, schedule: dfbf1867-ba3e-445e-93fe-6cbf2458feb6
+[Jan 12, 2024 5:46 PM] --> [/register] - success - 10bb99ea-4cf9-404c-9de3-ff7c48c830f5
+[Jan 12, 2024 5:46 PM] --> [/register] - email: jalaym825@gmail.com, userId: jalaym825
+[Jan 12, 2024 5:46 PM] --> [/sendVerificationMail] - success - 10bb99ea-4cf9-404c-9de3-ff7c48c830f5
+[Jan 12, 2024 5:46 PM] --> [/sendVerificationMail] - email: jalaym825@gmail.com
+[Jan 12, 2024 5:46 PM] --> [/verify] - success - jalaym825
+[Jan 12, 2024 5:46 PM] --> [/verify] - userId: jalaym825, token: 8b4b48bc0274d9ae631e6cf90a5c85b332a488dffd9e6dbaf22ba80920f1a139
+[Jan 12, 2024 5:46 PM] --> [/login] - success - 10bb99ea-4cf9-404c-9de3-ff7c48c830f5
+[Jan 12, 2024 5:46 PM] --> [/login] - jalaym825@gmail.com
+[Jan 12, 2024 5:47 PM] --> [/matches] - user: jalaym825 authenticated
+[Jan 12, 2024 5:47 PM] --> [/matches] - user: jalaym825, role: USER
+[Jan 12, 2024 5:47 PM] --> [/matches] - unauthorized access by user: jalaym825
+[Jan 12, 2024 5:47 PM] --> [/matches] - user: jalaym825 authenticated
+[Jan 12, 2024 5:47 PM] --> [/matches] - user: jalaym825, role: USER
+[Jan 12, 2024 5:47 PM] --> [/matches] - unauthorized access by user: jalaym825
+[Jan 12, 2024 5:47 PM] --> [/matches] - user: jalaym825 authenticated
+[Jan 12, 2024 5:47 PM] --> [/matches] - user: jalaym825, role: SPORTS_HEAD
+[Jan 12, 2024 5:47 PM] --> [/matches] - user: jalaym825 authorized
+[Jan 12, 2024 5:47 PM] --> [/team] - CSPITCE added
+[Jan 12, 2024 5:47 PM] --> [/matches] - user: jalaym825 authenticated
+[Jan 12, 2024 5:47 PM] --> [/matches] - user: jalaym825, role: SPORTS_HEAD
+[Jan 12, 2024 5:47 PM] --> [/matches] - user: jalaym825 authorized
+[Jan 12, 2024 5:47 PM] --> [/team] - CSPITCSE added
+[Jan 12, 2024 5:48 PM] --> [/matches] - user: jalaym825 authenticated
+[Jan 12, 2024 5:48 PM] --> [/matches] - user: jalaym825, role: SPORTS_HEAD
+[Jan 12, 2024 5:48 PM] --> [/matches] - user: jalaym825 authorized
+[Jan 12, 2024 5:48 PM] --> [/matches] - match added, match: c3c2dfde-53ec-455e-8fd7-90807ade58ef
+[Jan 12, 2024 5:48 PM] --> [/matches] - match schedule added, schedule: c3c2dfde-53ec-455e-8fd7-90807ade58ef
+[Jan 12, 2024 5:48 PM] --> [/matches] - 1 matches found
+[Jan 12, 2024 5:49 PM] --> [/matches] - 1 matches found
+[Jan 12, 2024 5:51 PM] --> [/matches] - data missing
+[Jan 12, 2024 5:51 PM] --> [/matches] - year: undefined
+[Jan 12, 2024 5:51 PM] --> [/matches] - 1 matches found
+[Jan 12, 2024 6:07 PM] --> [/matches] - jwt expired
+[Jan 12, 2024 6:07 PM] --> [/login] - success - 10bb99ea-4cf9-404c-9de3-ff7c48c830f5
+[Jan 12, 2024 6:07 PM] --> [/login] - jalaym825@gmail.com
+[Jan 12, 2024 6:07 PM] --> [/matches] - user: jalaym825 authenticated
+[Jan 12, 2024 6:07 PM] --> [/matches] - user: jalaym825, role: SPORTS_HEAD
+[Jan 12, 2024 6:07 PM] --> [/matches] - user: jalaym825 authorized
+[Jan 12, 2024 6:07 PM] --> [/team/player] - 
+Invalid `prisma.cricketPlayer.create()` invocation in
+/Users/jalaymovaliya/SGP-2/src/api/team/controller.ts:95:49
+
+  92     }
+  93 });
+  94 if (!player) {
+→ 95     player = await prisma.cricketPlayer.create(
+Foreign key constraint failed on the field: `CricketPlayer_userId_fkey (index)`
+[Jan 12, 2024 6:08 PM] --> [/matches] - user: jalaym825 authenticated
+[Jan 12, 2024 6:08 PM] --> [/matches] - user: jalaym825, role: SPORTS_HEAD
+[Jan 12, 2024 6:08 PM] --> [/matches] - user: jalaym825 authorized
+[Jan 12, 2024 6:08 PM] --> [/team/player] - jalaym825 added
+[Jan 12, 2024 6:13 PM] --> [/team/:id] - CSPITCE found
+[Jan 12, 2024 6:14 PM] --> [/matches] - user: jalaym825 authenticated
+[Jan 12, 2024 6:14 PM] --> [/matches] - user: jalaym825, role: SPORTS_HEAD
+[Jan 12, 2024 6:14 PM] --> [/matches] - user: jalaym825 authorized
+[Jan 12, 2024 6:14 PM] --> [/team/player] - jalaym825 added
+[Jan 12, 2024 6:14 PM] --> [/team/:id] - CSPITCE found
+[Jan 12, 2024 6:16 PM] --> [/auth] - user: jalaym825 authenticated
+[Jan 12, 2024 6:16 PM] --> [/logout] - success - jalaym825
+[Jan 12, 2024 6:16 PM] --> [/auth] - token missing
+[Jan 12, 2024 6:16 PM] --> [/auth] - token: undefined
+[Jan 12, 2024 6:16 PM] --> [/team/:id] - CSPITCE found
+[Jan 12, 2024 6:16 PM] --> [/team/:id] - CSPITCSE found
+[Jan 12, 2024 6:17 PM] --> [/matches] - token missing
+[Jan 12, 2024 6:17 PM] --> [/matches] - token: undefined
+[Jan 12, 2024 6:17 PM] --> [/login]: user not found
+[Jan 12, 2024 6:17 PM] --> [/login] - emailOrUserId: jalaym825
+[Jan 12, 2024 6:19 PM] --> [/matches] - token missing
+[Jan 12, 2024 6:19 PM] --> [/matches] - token: undefined
+[Jan 12, 2024 6:20 PM] --> [/login] - success - undefined
+[Jan 12, 2024 6:20 PM] --> [/login] - jalaym825@gmail.com
+[Jan 12, 2024 6:20 PM] --> [/matches] - user: jalaym825 authenticated
+[Jan 12, 2024 6:20 PM] --> [/matches] - user: jalaym825, role: SPORTS_HEAD
+[Jan 12, 2024 6:20 PM] --> [/matches] - user: jalaym825 authorized
+[Jan 12, 2024 6:20 PM] --> [/team/player] - jalaym825 added
+[Jan 12, 2024 6:21 PM] --> [/team/:id] - CSPITCSE found
+[Jan 12, 2024 6:21 PM] --> [/matches] - user: jalaym825 authenticated
+[Jan 12, 2024 6:21 PM] --> [/matches] - user: jalaym825, role: SPORTS_HEAD
+[Jan 12, 2024 6:21 PM] --> [/matches] - user: jalaym825 authorized
+[Jan 12, 2024 6:21 PM] --> [/team/player] - jalaym825 added
+[Jan 12, 2024 6:21 PM] --> [/team/:id] - CSPITCSE found
+[Jan 12, 2024 6:21 PM] --> [/team/:id] - CSPITCSE found
+[Jan 12, 2024 6:21 PM] --> [/team/:id] - CSPITCSE found
+[Jan 12, 2024 6:22 PM] --> [/team/:id] - CSPITCSE found

@@ -1,14 +1,13 @@
 import { Request, Response } from "express";
 import logger from "../../utils/logger";
-import { PrismaClient } from '@prisma/client';
 import { isValidEmail } from "../../utils/heplers";
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
 import axios from "axios";
 import crypto from "crypto";
 import Mailer from "../../utils/mailer";
+import prisma from '../../utils/prisma';
 
-const prisma = new PrismaClient();
 
 const genAccRefTokens = async (userId: any) => {
     try {
@@ -95,7 +94,7 @@ const register = async (req: Request, res: Response) => {
                 role: "USER"
             },
         });
-        logger.info(`[/register] - success - ${newUser.sis_id}`);
+        logger.info(`[/register] - success - ${newUser.userId}`);
         logger.debug(`[/register] - email: ${email}, userId: ${userId}`);
 
         const res1 = await axios.post(`${process.env.SERVER_URL}/auth/sendVerificationMail`, {
@@ -279,7 +278,7 @@ const sendVerificationMail = async (req: Request, res: Response) => {
             html: `<p>Click <a href="${link}">here</a> to verify your email</p>`,
             text: `Click this link to verify your email ${link}`,
         }).then((_info) => {
-            logger.info(`[/sendVerificationMail] - success - ${user.sis_id}`);
+            logger.info(`[/sendVerificationMail] - success - ${user.userId}`);
             logger.debug(`[/sendVerificationMail] - email: ${email}`);
             return res.status(200).json({
                 data: {
@@ -337,7 +336,7 @@ const logout = async (req: Request, res: Response) => {
                 refreshToken: null
             }
         });
-        logger.info(`[/logout] - success - ${user.sis_id}`);
+        logger.info(`[/logout] - success - ${user.userId}`);
         const options = {
             httpOnly: true,
             secure: true
@@ -427,7 +426,7 @@ const verify = async (req: Request, res: Response) => {
 
         await prisma.user.update({
             where: {
-                sis_id: user?.sis_id
+                userId: user?.userId
             },
             data: {
                 rec_status: true

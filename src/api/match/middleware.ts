@@ -2,14 +2,15 @@ import { NextFunction, Request, Response } from "express";
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import logger from "../../utils/logger";
 import prisma from '../../utils/prisma';
+
 interface AuthenticatedRequest extends Request {
     user?: any
 }
 const verifyJWT = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const token = req.cookies?.accessToken || req.header("Authorization")?.split(" ")[1];
     if (!token) {
-        logger.warn(`[/auth] - token missing`);
-        logger.debug(`[/auth] - token: ${token}`);
+        logger.warn(`[/matches] - token missing`);
+        logger.debug(`[/matches] - token: ${token}`);
         return res.status(401).json({
             data: {
                 error: 'No token provided.'
@@ -25,22 +26,43 @@ const verifyJWT = async (req: AuthenticatedRequest, res: Response, next: NextFun
         });
         
         if (!user) {
-            logger.warn(`[/auth] - user not found`);
+            logger.warn(`[/matches] - user not found`);
             return res.status(401).json({
                 data: {
                     error: 'Invalid access token.'
                 }
             });
         }
-        logger.info(`[/auth] - user: ${user?.userId} authenticated`);
+        logger.info(`[/matches] - user: ${user?.userId} authenticated`);
         req.user = user;
         next();
     } catch (error: any) {
-        logger.error(`[/auth] - ${error.message}`);
+        logger.error(`[/matches] - ${error.message}`);
         return res.status(500).json({
             error: 'Failed to authenticate token.'
         });
     }
 }
 
-export { verifyJWT };
+const isSportsHead = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+        logger.debug(`[/matches] - user: ${req.user.userId}, role: ${req.user.role}`);
+        if (req.user.role !== 'SPORTS_HEAD') {
+            logger.warn(`[/matches] - unauthorized access by user: ${req.user.userId}`);
+            return res.status(401).json({
+                data: {
+                    error: 'Unauthorized access.'
+                }
+            });
+        }
+        logger.info(`[/matches] - user: ${req.user.userId} authorized`);
+        next();
+    } catch (error: any) {
+        logger.error(`[/matches] - ${error.message}`);
+        return res.status(500).json({
+            error: 'Failed to authenticate token.'
+        });
+    }
+}
+
+export { verifyJWT, isSportsHead };
