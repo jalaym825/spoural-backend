@@ -17,7 +17,7 @@ router.get('/verify/:token', controller.verify);
 router.post('/sendVerificationMail', verificationMailLimiter, controller.sendVerificationMail);
 router.post("/register", controller.register);
 router.post('/login', controller.login);
-router.post('/refreshToken', controller.refreshAccessToken);
+router.post('/refreshAccessToken', controller.refreshAccessToken);
 router.post('/logout', verifyJWT, controller.logout);
 
 // export default router;
