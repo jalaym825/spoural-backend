@@ -39,6 +39,8 @@ model CricketSchedule {
   team2Id       String
   team2         CricketTeam  @relation("team2", fields: [team2Id], references: [sis_id])
   dependendency Boolean      @default(false)
+  date          DateTime
+  year          String
 }
 
 model CricketTeam {
@@ -65,10 +67,18 @@ model CricketPlayer {
   isAllRounder         Boolean        @default(false)
   isBatsman            Boolean        @default(false)
   isBowler             Boolean        @default(false)
+  noOfMatchesPlayed    Int            @default(0)
+  noOfSixes            Int            @default(0)
+  noOfFours            Int            @default(0)
+  noOfWicketsTaken     Int            @default(0)
+  noOfRunsScored       Int            @default(0)
+  noOfHalfCenturies    Int            @default(0)
+  noOfCenturies        Int            @default(0)
   teamId               String?
   team                 CricketTeam?   @relation("playerTeam", fields: [teamId], references: [sis_id])
   matches              CricketMatch[] @relation("playerMatches")
   user_cricket_players User[]         @relation("cricketPlayer")
+  overs                CricketOver[]  @relation("bowler")
 }
 
 model CricketMatch {
@@ -82,6 +92,7 @@ model CricketMatch {
   team2            CricketTeam      @relation("team2", fields: [team2Id], references: [sis_id])
   players          CricketPlayer[]  @relation("playerMatches")
   schedule_matches CricketSchedule? @relation("scheduleMatches")
+  over_match       CricketOver[]    @relation("match")
 }
 
 model VerificationToken {
@@ -91,4 +102,16 @@ model VerificationToken {
   updatedAt  DateTime @updatedAt
   expiration DateTime
   user       User     @relation("verificationToken", fields: [sis_id], references: [userId])
+}
+
+model CricketOver {
+  sis_id   String        @id @default(uuid())
+  bowlerId String
+  bowler   CricketPlayer @relation("bowler", fields: [bowlerId], references: [sis_id])
+  matchId  String
+  match    CricketMatch  @relation("match", fields: [matchId], references: [sis_id])
+  runs     Int           @default(0)
+  wickets  Int           @default(0)
+  balls    Int           @default(0)
+  isMaiden Boolean       @default(false)
 }
