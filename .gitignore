@@ -3,3 +3,4 @@ node_modules
 .env
 *.log
 swagger-output.json
+prisma/migrations
