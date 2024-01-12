@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import logger from "../../utils/logger";
 import { isValidEmail } from "../../utils/heplers";
 import bcrypt from "bcrypt";
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import axios from "axios";
 import crypto from "crypto";
 import Mailer from "../../utils/mailer";
@@ -238,7 +238,7 @@ const sendVerificationMail = async (req: Request, res: Response) => {
                 }
             });
         }
-        const user:any = await prisma.user.findFirst({
+        const user: any = await prisma.user.findFirst({
             where: {
                 email: email.toLowerCase(),
             },
@@ -451,4 +451,69 @@ const verify = async (req: Request, res: Response) => {
         });
     }
 }
-export default { login, register, sendVerificationMail, logout, verify };
+
+
+const refreshAccessToken = async (req: Request, res: Response) => {
+    try {
+        const { refreshToken } = req.cookies || req.body;
+        if (!refreshToken) {
+            logger.warn(`[/refreshAccessToken] - refreshToken not found or invalid token`);
+            return res.status(400).json({
+                data: {
+                    error: "Refresh token not found or invalid token",
+                }
+            });
+        }
+
+        const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET!) as JwtPayload;
+
+        const user = await prisma.user.findFirst({
+            where: {
+                userId: decoded.userId
+            }
+        });
+        if (!user) {
+            logger.warn(`[/refreshAccessToken] - invalid refresh token`);
+            return res.status(400).json({
+                data: {
+                    error: "Invalid refresh token",
+                }
+            });
+        }
+
+        if (refreshToken !== user.refreshToken) {
+            logger.warn(`[/refreshAccessToken] - invalid refresh token`);
+            return res.status(400).json({
+                data: {
+                    error: "Invalid refresh token",
+                }
+            });
+        }
+
+        const { accessToken, refreshToken: newRefreshToken } = await genAccRefTokens(user.userId);
+        logger.info(`[/refreshAccessToken] - success - ${user.userId}`);
+        const options = {
+            httpOnly: true,
+            secure: true
+        }
+        return res.status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", newRefreshToken, options)
+            .json({
+                data: {
+                    accessToken, refreshToken: newRefreshToken,
+                    mesage: `Access token refreshed successfully`
+                }
+            });
+    } catch (err: any) {
+        logger.error(`[/refreshAccessToken] - ${err.message}`);
+        return res.status(500).json({
+            data: {
+                error: "Something went wrong",
+            }
+        });
+    }
+}
+
+
+export default { login, register, sendVerificationMail, logout, verify, refreshAccessToken };
