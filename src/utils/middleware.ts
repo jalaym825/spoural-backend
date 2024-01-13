@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import jwt, { JwtPayload } from 'jsonwebtoken';
-import logger from "../../utils/logger";
-import prisma from '../../utils/prisma';
+import logger from "./logger";
+import prisma from './prisma';
 
 interface AuthenticatedRequest extends Request {
     user?: any

@@ -1,7 +1,7 @@
 import controller from './controller';
 import { Router } from 'express';
 import ratelimit from 'express-rate-limit';
-import { verifyJWT } from './middleware';
+import { verifyJWT } from '../../utils/middleware';
 const router = Router();
 
 const verificationMailLimiter = ratelimit({

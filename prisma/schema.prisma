@@ -16,8 +16,8 @@ enum Role {
 model User {
   userId             String              @id @unique
   email              String              @unique
-  name               String
-  password           String
+  name               String?
+  password           String?
   refreshToken       String?
   role               Role                @default(USER)
   createdAt          DateTime            @default(now())
@@ -54,6 +54,8 @@ model CricketTeam {
   team1_matches  CricketMatch[]    @relation("team1")
   schedule_team1 CricketSchedule[] @relation("team1")
   schedule_team2 CricketSchedule[] @relation("team2")
+
+  // @@unique([sis_id, year])
 }
 
 model CricketPlayer {

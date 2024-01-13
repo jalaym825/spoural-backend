@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import axios from "axios";
 import crypto from "crypto";
-import Mailer from "../../utils/mailer";
+import nodemailer from "../../utils/mailer";
 import prisma from '../../utils/prisma';
 
 
@@ -274,7 +274,6 @@ const sendVerificationMail = async (req: Request, res: Response) => {
         // create env variable for frontend url
         let link = `${process.env.SERVER_URL}/auth/verify/${tokenData.token}`;
 
-        const nodemailer = new Mailer();
         nodemailer.sendMail([email], "Verify your email", {
             html: `<p>Click <a href="${link}">here</a> to verify your email</p>`,
             text: `Click this link to verify your email ${link}`,

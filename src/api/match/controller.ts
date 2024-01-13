@@ -4,7 +4,7 @@ import prisma from '../../utils/prisma';
 
 const getMatches = async (req: Request, res: Response) => {
     try {
-        const { year } = req.query;
+        const { year } = req.params;
         if (!year) {
             logger.warn(`[/matches] - data missing`);
             logger.debug(`[/matches] - year: ${year}`);

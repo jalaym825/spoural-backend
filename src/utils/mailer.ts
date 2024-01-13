@@ -1,8 +1,8 @@
 import nodemailer from "nodemailer";
 
 interface body {
-    html: string;
-    text: string;
+    html?: string;
+    text?: string;
 }
 
 class Mailer {
@@ -32,4 +32,4 @@ class Mailer {
     }
 }
 
-export default Mailer;
+export default new Mailer();
