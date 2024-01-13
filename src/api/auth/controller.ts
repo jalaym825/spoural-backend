@@ -8,6 +8,10 @@ import crypto from "crypto";
 import nodemailer from "../../utils/mailer";
 import prisma from '../../utils/prisma';
 
+interface AuthenticatedRequest extends Request {
+    user?: any
+}
+
 
 const genAccRefTokens = async (userId: any) => {
     try {
@@ -217,74 +221,54 @@ const login = async (req: Request, res: Response) => {
     }
 }
 
-const sendVerificationMail = async (req: Request, res: Response) => {
+const sendVerificationMail = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const { email } = req.body;
-        if (!email) {
-            logger.warn(`[/sendVerificationMail] - data missing`);
-            logger.debug(`[/sendVerificationMail] - email: ${email}`);
-            return res.status(400).json({
-                data: {
-                    error: "Please provide all the required fields",
-                }
-            });
-        }
-        if (!isValidEmail(email)) {
-            logger.warn(`[/sendVerificationMail] - invalid email`);
-            logger.debug(`[/sendVerificationMail] - email: ${email}`);
-            return res.status(400).json({
-                data: {
-                    error: "Please provide a valid email",
-                }
-            });
-        }
-        const user: any = await prisma.user.findFirst({
+        const secretToken = crypto.randomBytes(32).toString("hex");
+        let tokenData = await prisma.verificationToken.findFirst({
             where: {
-                email: email.toLowerCase(),
+                sis_id: req.user.userId,
             },
         });
-        if (!user) {
-            logger.warn(`[/sendVerificationMail] - user not found`);
-            logger.debug(`[/sendVerificationMail] - email: ${email}`);
+        if (tokenData && tokenData.expiration > new Date()) {
+            logger.warn(`[/sendVerificationMail] - verification mail already sent`);
+            logger.debug(`[/sendVerificationMail] - email: ${req.user.email}`);
             return res.status(400).json({
                 data: {
-                    error: "User not found",
+                    error: `Verification mail already sent, you can resend it after ${Number(tokenData.expiration) - Date.now()} ms`,
                 }
-            });
+            })
         }
-        const secretToken = crypto.randomBytes(32).toString("hex");
-        const tokenData = await prisma.verificationToken.upsert({
+
+        tokenData = await prisma.verificationToken.upsert({
             where: {
-                sis_id: user.userId,
+                sis_id: req.user.userId,
             },
             update: {
-                sis_id: user.userId,
+                sis_id: req.user.userId,
                 token: secretToken,
-                //expire infinte
-                expiration: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+                expiration: new Date(Date.now() + 60 * 1000 * 60), // 1 hour
             },
             create: {
-                sis_id: user.userId,
+                sis_id: req.user.userId,
                 token: secretToken,
-                //expire infinte
-                expiration: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+                expiration: new Date(Date.now() + 60 * 1000 * 60), // 1 hour
             },
         });
 
         // create env variable for frontend url
         let link = `${process.env.SERVER_URL}/auth/verify/${tokenData.token}`;
 
-        nodemailer.sendMail([email], "Verify your email", {
+        nodemailer.sendMail([req.user.email], "Verify your email", {
             html: `<p>Click <a href="${link}">here</a> to verify your email</p>`,
             text: `Click this link to verify your email ${link}`,
         }).then((_info) => {
-            logger.info(`[/sendVerificationMail] - success - ${user.userId}`);
-            logger.debug(`[/sendVerificationMail] - email: ${email}`);
-            delete user.refreshToken;
-            delete user.password;
+            logger.info(`[/sendVerificationMail] - success - ${req.user.userId}`);
+            logger.debug(`[/sendVerificationMail] - email: ${req.user.email}`);
+            delete req.user.refreshToken;
+            delete req.user.password;
             return res.status(200).json({
                 data: {
-                    user,
+                    user: req.user,
                     message: "Verification mail sent",
                 }
             });

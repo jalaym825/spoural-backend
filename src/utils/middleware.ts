@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import logger from "./logger";
 import prisma from './prisma';
+import { isValidEmail } from "./heplers";
 
 interface AuthenticatedRequest extends Request {
     user?: any
@@ -9,8 +10,8 @@ interface AuthenticatedRequest extends Request {
 const verifyJWT = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const token = req.cookies?.accessToken || req.header("Authorization")?.split(" ")[1];
     if (!token) {
-        logger.warn(`[/matches] - token missing`);
-        logger.debug(`[/matches] - token: ${token}`);
+        logger.warn(`[/middleware/verifyJWT] - token missing`);
+        logger.debug(`[/middleware/verifyJWT] - token: ${token}`);
         return res.status(401).json({
             data: {
                 error: 'No token provided.'
@@ -24,20 +25,20 @@ const verifyJWT = async (req: AuthenticatedRequest, res: Response, next: NextFun
                 userId: payload.userId
             }
         });
-        
+
         if (!user) {
-            logger.warn(`[/matches] - user not found`);
+            logger.warn(`[/middleware/verifyJWT] - user not found`);
             return res.status(401).json({
                 data: {
                     error: 'Invalid access token.'
                 }
             });
         }
-        logger.info(`[/matches] - user: ${user?.userId} authenticated`);
+        logger.info(`[/middleware/verifyJWT] - user: ${user?.userId} authenticated`);
         req.user = user;
         next();
     } catch (error: any) {
-        logger.error(`[/matches] - ${error.message}`);
+        logger.error(`[/middleware/verifyJWT] - ${error.message}`);
         return res.status(500).json({
             error: 'Failed to authenticate token.'
         });
@@ -46,23 +47,127 @@ const verifyJWT = async (req: AuthenticatedRequest, res: Response, next: NextFun
 
 const isSportsHead = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-        logger.debug(`[/matches] - user: ${req.user.userId}, role: ${req.user.role}`);
+        logger.debug(`[/middleware/isSportsHead] - user: ${req.user.userId}, role: ${req.user.role}`);
         if (req.user.role !== 'SPORTS_HEAD') {
-            logger.warn(`[/matches] - unauthorized access by user: ${req.user.userId}`);
+            logger.warn(`[/middleware/isSportsHead] - unauthorized access by user: ${req.user.userId}`);
             return res.status(401).json({
                 data: {
                     error: 'Unauthorized access.'
                 }
             });
         }
-        logger.info(`[/matches] - user: ${req.user.userId} authorized`);
+        logger.info(`[/middleware/isSportsHead] - user: ${req.user.userId} authorized`);
         next();
     } catch (error: any) {
-        logger.error(`[/matches] - ${error.message}`);
+        logger.error(`[/middleware/isSportsHead] - ${error.message}`);
         return res.status(500).json({
             error: 'Failed to authenticate token.'
         });
     }
 }
 
-export { verifyJWT, isSportsHead };
+const isUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { email, userId } = req.body;
+        if (!email && !userId) {
+            logger.warn(`[/middleware/isUser] - data missing`);
+            logger.debug(`[/middleware/isUser] - email: ${email}`);
+            return res.status(400).json({
+                data: {
+                    error: "Please provide all the required fields",
+                }
+            });
+        }
+        let user: any;
+        if (email) {
+            if (!isValidEmail(email)) {
+                logger.warn(`[/middleware/isUser] - invalid email`);
+                logger.debug(`[/middleware/isUser] - email: ${email}`);
+                return res.status(400).json({
+                    data: {
+                        error: "Please provide a valid email",
+                    }
+                });
+            }
+            user = await prisma.user.findFirst({
+                where: {
+                    email: email.toLowerCase(),
+                },
+            });
+        } else {
+            user = await prisma.user.findFirst({
+                where: {
+                    userId: userId,
+                },
+            });
+        }
+        if (!user) {
+            logger.warn(`[/middleware/isUser] - user not found`);
+            logger.debug(`[/middleware/isUser] - email: ${email}`);
+            return res.status(400).json({
+                data: {
+                    error: "User not found",
+                }
+            });
+        }
+        logger.info(`[/middleware/isUser] - user: ${user.userId} found`);
+        req.user = user;
+        next();
+    } catch (error: any) {
+        logger.error(`[/middleware/isUser] - ${error.message}`);
+        return res.status(500).json({
+            error: `Failed to find user: ${req.body.email}`
+        });
+    }
+}
+
+const isNotVerified = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+        logger.debug(`[/middleware/iseNotVerified] - user: ${req.user.userId}.`);
+        if (req.user.isVerified) {
+            logger.warn(`[/middleware/iseNotVerified] - user: ${req.user.userId} is already verified`);
+            return res.status(400).json({
+                data: {
+                    error: 'User is already verified.'
+                }
+            });
+        }
+        logger.info(`[/middleware/iseNotVerified] - user: ${req.user.userId} is not verified`);
+        next();
+    } catch (error: any) {
+        logger.error(`[/middleware/iseNotVerified] - ${error.message}`);
+        return res.status(500).json({
+            error: `While checking if user: ${req.user.userId} is verified`
+        });
+    }
+}
+
+const mailSent = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+        let tokenData = await prisma.verificationToken.findFirst({
+            where: {
+                sis_id: req.user.userId,
+            },
+        });
+        if (tokenData && tokenData.expiration > new Date()) {
+            logger.warn(`[/middleWare/mailSent] - verification mail already sent`);
+            logger.debug(`[/middleWare/mailSent] - email: ${req.user.email}`);
+            const leftTime = new Date(Number(tokenData.expiration) - Date.now());
+            return res.status(400).json({
+                leftTime,
+                data: {
+                    error: `Verification mail already sent, you can resend it after ${leftTime.getMinutes() != 0 ? `${leftTime.getMinutes()}:${leftTime.getSeconds()} minutes` : `${leftTime.getSeconds()} seconds`}`,
+                }
+            })
+        }
+        logger.info(`[/middleWare/mailSent] - verification mail not sent`);
+        next();
+    } catch (error: any) {
+        logger.error(`[/middleware/mailSent] - ${error.message}`);
+        return res.status(500).json({
+            error: `While checking if verification mail is already sent to user: ${req.user.email}`
+        });
+    }
+}
+
+export { verifyJWT, isSportsHead, isUser, isNotVerified, mailSent };

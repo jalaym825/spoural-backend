@@ -278,7 +278,7 @@ const getPlayers = async (req: Request, res: Response) => {
 const sendAddedToTeamMail = async (email: string, teamName: string, verified: boolean) => {
     try {
         const body = {
-            html: `<p>You have been added to the <strong>${teamName}</strong>. Please login to your account to view the team.${verified ? '' : '\n You will have to verify your email before you can login'}</p>`,
+            html: `<p>You have been added to the <strong>${teamName}</strong>. Please login to your account to view the team.${verified ? '' : '<br>You will have to verify your email before you can login'}</p>`,
             // text: `You have been added to the team. Please login to your account to view the team.${verified ? '' : ' You will have to verify your email before you can login'}`
         }
         await nodemailer.sendMail([email], 'Added to team', body);
