@@ -7,7 +7,7 @@ router.get('/year/:year', controller.getTeams);
 router.post('/', verifyJWT, isSportsHead, controller.addTeam);
 router.get('/team/:id', controller.getTeam);
 router.get('/:id/players', controller.getPlayers);
-router.post('/player', verifyJWT, isSportsHead, controller.addPlayer);
+router.put('/player', verifyJWT, isSportsHead, controller.addPlayer);
 
 // export default router;
 export default router;

@@ -6,6 +6,7 @@ import { isValidEmail } from "./heplers";
 
 interface AuthenticatedRequest extends Request {
     user?: any
+    match?: any
 }
 const verifyJWT = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const token = req.cookies?.accessToken || req.header("Authorization")?.split(" ")[1];
@@ -170,4 +171,53 @@ const mailSent = async (req: AuthenticatedRequest, res: Response, next: NextFunc
     }
 }
 
-export { verifyJWT, isSportsHead, isUser, isNotVerified, mailSent };
+const isValidMatch = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { matchId } = req.params;
+        const match = await prisma.cricketMatch.findFirst({
+            where: { sis_id: matchId },
+            select: {
+                team1: true,
+                team2: true,
+                sis_id: true,
+                tossWonBy: true
+                // played: true
+            }
+        })
+        if (!match) {
+            logger.warn(`[/middleware/isValidMatch] - match not found`);
+            logger.debug(`[/middleware/isValidMatch] - matchId: ${matchId}`);
+            return res.status(404).json({ data: { error: 'Match not found' } })
+        }
+        req.match = match;
+        next();
+    } catch (error: any) {
+        logger.error(`[/middleware/isValidMatch] - ${error.message}`);
+        return res.status(500).json({
+            data: { error: `While checking if match: ${req.params.matchId} is valid` }
+        });
+    }
+}
+
+const isMatchPlayed = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+        if (!req.match) {
+            logger.warn(`[/middleware/isMatchPlayed] - match not found`);
+            logger.debug(`[/middleware/isMatchPlayed] - matchId: ${req.match.matchId}`);
+            return res.status(404).json({ data: { error: 'Match not found' } })
+        }
+        if (!req.match.played) {
+            logger.warn(`[/middleware/isMatchPlayed] - match not played yet`);
+            logger.debug(`[/middleware/isMatchPlayed] - matchId: ${req.match.matchId}`);
+            return res.status(400).json({ data: { error: 'Match not played' } })
+        }
+        next();
+    } catch (error: any) {
+        logger.error(`[/middleware/isMatchPlayed] - ${error.message}`);
+        return res.status(500).json({
+            data: { error: `While checking if match: ${req.match.matchId} is played` }
+        });
+    }
+}
+
+export { verifyJWT, isSportsHead, isUser, isNotVerified, mailSent, isValidMatch, isMatchPlayed };

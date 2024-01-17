@@ -13,12 +13,12 @@ const verificationMailLimiter = ratelimit({
         }
     }
 });
-router.get('/verify/:token', controller.verify);
+router.put('/verify/:token', controller.verify);
 router.post('/sendVerificationMail', isUser, isNotVerified, mailSent, verificationMailLimiter, controller.sendVerificationMail);
 router.post("/register", controller.register);
 router.post('/login', controller.login);
 router.post('/refreshAccessToken', controller.refreshAccessToken);
-router.post('/logout', verifyJWT, controller.logout);
+router.put('/logout', verifyJWT, controller.logout);
 
 // export default router;
 export default router;

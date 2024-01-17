@@ -186,24 +186,30 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
                 email: playerEmail
             });
         }
-        let player = await prisma.cricketPlayer.findFirst({
-            where: {
-                userId: playerId
-            },
-            include: {
-                user: true
-            }
-        });
-        if (!player) {
-            player = await prisma.cricketPlayer.create({
+        let player:any;
+        if(!playerId)
+        {
+            player  = await prisma.cricketPlayer.create({
                 data: {
-                    userId: playerId,
+                    userId: user.userId,
+                },
+                include: {
+                    user: true
+                }
+            })
+        }
+        else
+        {
+            player = await prisma.cricketPlayer.findFirst({
+                where: {
+                    sis_id: playerId
                 },
                 include: {
                     user: true
                 }
             });
         }
+        
         const team = await prisma.cricketTeam.update({
             where: {
                 sis_id: teamId

@@ -98,6 +98,85 @@ const addMatch = async (req: Request, res: Response) => {
     }
 }
 
+interface CustomRequest extends Request {
+    match?: any
+}
 
+const startMatch = async (req: CustomRequest, res: Response) => {
+    try {
+        if(req.match.played) {
+            logger.warn(`[/matches] - match already started`);
+            return res.status(400).json({
+                data: {
+                    error: "Match already started"
+                }
+            });
+        }
 
-export default { getMatches, addMatch }
+        const match = await prisma.cricketMatch.update({
+            where: {
+                sis_id: req.match.sis_id
+            },
+            data: {
+                played: true
+            }
+        });
+
+        logger.info(`[/matches] - match started, match: ${match.sis_id}`);
+
+        return res.status(200).json({
+            data: {
+                match
+            }
+        });
+    } catch (error: any) {
+        logger.error(`[/matches] - ${error.message}`);
+        return res.status(500).json({
+            data: {
+                error: error.message
+            }
+        });
+    }
+}
+
+const updateMatchToss = async (req: CustomRequest, res: Response) => {
+    try {
+        if(req.match.tossWonBy) {
+            logger.warn(`[/matches] - match toss already updated`);
+            return res.status(400).json({
+                data: {
+                    error: "Match toss already updated"
+                }
+            });
+        }
+        const { tossWonBy } = req.body;
+        const match = await prisma.cricketMatch.update({
+            where: {
+                sis_id: req.match.sis_id
+            },
+            data: {
+                tossWonBy
+            },
+            include: {
+                tossWonByTeam: true
+            }
+        });
+
+        logger.info(`[/matches/updateMatchToss] - match toss updated, match: ${match.sis_id}`);
+
+        return res.status(200).json({
+            data: {
+                match
+            }
+        });
+    } catch (error: any) {
+        logger.error(`[/matches/updateMatchToss] - ${error.message}`);
+        return res.status(500).json({
+            data: {
+                error: error.message
+            }
+        });
+    }
+}
+
+export default { getMatches, addMatch, startMatch, updateMatchToss }

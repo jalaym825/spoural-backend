@@ -12,7 +12,6 @@ interface AuthenticatedRequest extends Request {
     user?: any
 }
 
-
 const genAccRefTokens = async (userId: any) => {
     try {
         const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET!, {
@@ -30,9 +29,10 @@ const genAccRefTokens = async (userId: any) => {
                 refreshToken
             }
         });
+        logger.info(`[/auht/genAccRefTokens] - success - ${userId}`);
         return { accessToken, refreshToken };
     } catch (err: any) {
-        logger.error(`[/genAccRefTokens] - ${err.message}`);
+        logger.error(`[/auht/genAccRefTokens] - ${err.message}`);
         throw new Error("Something went wrong");
     }
 }
@@ -41,8 +41,8 @@ const register = async (req: Request, res: Response) => {
     try {
         const { name, email, userId, password } = req.body;
         if (!email || !userId || !password) {
-            logger.warn(`[/register] - data missing`);
-            logger.debug(`[/register] - email: ${email}, userId: ${userId}`);
+            logger.warn(`[/auth/register] - data missing`);
+            logger.debug(`[/auth/register] - email: ${email}, userId: ${userId}`);
             return res.status(400).json({
                 data: {
                     error: "Please provide all the required fields",
@@ -50,8 +50,8 @@ const register = async (req: Request, res: Response) => {
             });
         }
         if (!isValidEmail(email)) {
-            logger.warn(`[/register] - invalid email`);
-            logger.debug(`[/register] - email: ${email}`);
+            logger.warn(`[/auth/register] - invalid email`);
+            logger.debug(`[/auth/register] - email: ${email}`);
             return res.status(400).json({
                 data: {
                     error: "Please provide a valid email",
@@ -64,8 +64,8 @@ const register = async (req: Request, res: Response) => {
             },
         });
         if (user) {
-            logger.warn(`[/register] - email already exists`);
-            logger.debug(`[/register] - email: ${email}`);
+            logger.warn(`[/auth/register] - email already exists`);
+            logger.debug(`[/auth/register] - email: ${email}`);
             return res.status(400).json({
                 data: {
                     error: "Email already exists",
@@ -78,8 +78,8 @@ const register = async (req: Request, res: Response) => {
             },
         });
         if (user2) {
-            logger.warn(`[/register] - userId already exists`);
-            logger.debug(`[/register] - userId: ${userId}`);
+            logger.warn(`[/auth/register] - userId already exists`);
+            logger.debug(`[/auth/register] - userId: ${userId}`);
             return res.status(400).json({
                 data: {
                     error: "UserId already exists",
@@ -98,8 +98,8 @@ const register = async (req: Request, res: Response) => {
                 role: "USER"
             },
         });
-        logger.info(`[/register] - success - ${newUser.userId}`);
-        logger.debug(`[/register] - email: ${email}, userId: ${userId}`);
+        logger.info(`[/auth/register] - success - ${newUser.userId}`);
+        logger.debug(`[/auth/register] - email: ${email}, userId: ${userId}`);
 
         const res1 = await axios.post(`${process.env.SERVER_URL}/auth/sendVerificationMail`, {
             email: email.toLowerCase()
@@ -119,7 +119,7 @@ const register = async (req: Request, res: Response) => {
         });
     } catch (err: any) {
         console.log(err);
-        logger.error(`[/register] - ${err.message}`);
+        logger.error(`[/auth/register] - ${err.message}`);
         return res.status(500).json({
             data: {
                 error: "Something went wrong",
@@ -132,8 +132,8 @@ const login = async (req: Request, res: Response) => {
     try {
         const { emailOrUserId, password } = req.body;
         if (!emailOrUserId || !password) {
-            logger.warn(`[/login] - data missing`);
-            logger.debug(`[/login] - emailOrUserId: ${emailOrUserId}`);
+            logger.warn(`[/auth/login] - data missing`);
+            logger.debug(`[/auth/login] - emailOrUserId: ${emailOrUserId}`);
             return res.status(400).json({
                 data: {
                     error: "Please provide all the required fields",
@@ -148,8 +148,8 @@ const login = async (req: Request, res: Response) => {
                 },
             });
             if (!user) {
-                logger.warn("[/login]: emailOrUserId invalid");
-                logger.debug(`[/login] - emailOrUserId: ${emailOrUserId}`);
+                logger.warn("[/auth/login]: emailOrUserId invalid");
+                logger.debug(`[/auth/login] - emailOrUserId: ${emailOrUserId}`);
                 return res.status(400).json({
                     data:
                     {
@@ -166,8 +166,8 @@ const login = async (req: Request, res: Response) => {
         });
 
         if (!user) {
-            logger.warn("[/login]: user not found");
-            logger.debug(`[/login] - emailOrUserId: ${emailOrUserId}`);
+            logger.warn("[/auth/login]: user not found");
+            logger.debug(`[/auth/login] - emailOrUserId: ${emailOrUserId}`);
             return res.status(400).json({
                 data:
                 {
@@ -177,8 +177,8 @@ const login = async (req: Request, res: Response) => {
         }
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            logger.warn(`[/login] - incorrect userId/email or password`);
-            logger.debug(`[/login] - ${emailOrUserId}`);
+            logger.warn(`[/auth/login] - incorrect userId/email or password`);
+            logger.debug(`[/auth/login] - ${emailOrUserId}`);
             return res.status(400).json({
                 data:
                 {
@@ -188,8 +188,8 @@ const login = async (req: Request, res: Response) => {
         }
 
         const { refreshToken, accessToken } = await genAccRefTokens(user.userId);
-        logger.info(`[/login] - success - ${user.sis_id}`);
-        logger.debug(`[/login] - ${emailOrUserId}`);
+        logger.info(`[/auth/login] - success - ${user.sis_id}`);
+        logger.debug(`[/auth/login] - ${emailOrUserId}`);
 
         let _user = { ...user };
         delete _user.password;
@@ -211,7 +211,7 @@ const login = async (req: Request, res: Response) => {
             });
     }
     catch (err: any) {
-        logger.error(`[/login] - ${err.message}`);
+        logger.error(`[/auth/login] - ${err.message}`);
         return res.status(500).json({
             data:
             {
@@ -230,8 +230,8 @@ const sendVerificationMail = async (req: AuthenticatedRequest, res: Response) =>
             },
         });
         if (tokenData && tokenData.expiration > new Date()) {
-            logger.warn(`[/sendVerificationMail] - verification mail already sent`);
-            logger.debug(`[/sendVerificationMail] - email: ${req.user.email}`);
+            logger.warn(`[/auth/sendVerificationMail] - verification mail already sent`);
+            logger.debug(`[/auth/sendVerificationMail] - email: ${req.user.email}`);
             return res.status(400).json({
                 data: {
                     error: `Verification mail already sent, you can resend it after ${Number(tokenData.expiration) - Date.now()} ms`,
@@ -262,8 +262,8 @@ const sendVerificationMail = async (req: AuthenticatedRequest, res: Response) =>
             html: `<p>Click <a href="${link}">here</a> to verify your email</p>`,
             text: `Click this link to verify your email ${link}`,
         }).then((_info) => {
-            logger.info(`[/sendVerificationMail] - success - ${req.user.userId}`);
-            logger.debug(`[/sendVerificationMail] - email: ${req.user.email}`);
+            logger.info(`[/auth/sendVerificationMail] - success - ${req.user.userId}`);
+            logger.debug(`[/auth/sendVerificationMail] - email: ${req.user.email}`);
             delete req.user.refreshToken;
             delete req.user.password;
             return res.status(200).json({
@@ -281,7 +281,7 @@ const sendVerificationMail = async (req: AuthenticatedRequest, res: Response) =>
         });
     } catch (err: any) {
         console.log(err);
-        logger.error(`[/sendVerificationMail] - ${err.message}`);
+        logger.error(`[/auth/sendVerificationMail] - ${err.message}`);
         return res.status(500).json({
             data: {
                 error: "Something went wrong",
@@ -294,7 +294,7 @@ const logout = async (req: Request, res: Response) => {
     try {
         const { refreshToken } = req.cookies;
         if (!refreshToken) {
-            logger.warn(`[/logout] - refreshToken not found`);
+            logger.warn(`[/auth/logout] - refreshToken not found`);
             return res.status(400).json({
                 data: {
                     error: "Refresh token not found",
@@ -307,7 +307,7 @@ const logout = async (req: Request, res: Response) => {
             }
         });
         if (!user) {
-            logger.warn(`[/logout] - user not found`);
+            logger.warn(`[/auth/logout] - user not found`);
             return res.status(400).json({
                 data: {
                     error: "User not found",
@@ -322,7 +322,7 @@ const logout = async (req: Request, res: Response) => {
                 refreshToken: null
             }
         });
-        logger.info(`[/logout] - success - ${user.userId}`);
+        logger.info(`[/auth/logout] - success - ${user.userId}`);
         const options = {
             httpOnly: true,
             secure: true
@@ -336,7 +336,7 @@ const logout = async (req: Request, res: Response) => {
                 }
             });
     } catch (err: any) {
-        logger.error(`[/logout] - ${err.message}`);
+        logger.error(`[/auth/logout] - ${err.message}`);
         return res.status(500).json({
             data: {
                 error: "Something went wrong",
@@ -349,8 +349,8 @@ const verify = async (req: Request, res: Response) => {
     try {
         const { token } = req.params;
         if (!token) {
-            logger.warn(`[/verify] - data missing`);
-            logger.debug(`[/verify] - token: ${token}`);
+            logger.warn(`[/auth/verify] - data missing`);
+            logger.debug(`[/auth/verify] - token: ${token}`);
             return res.status(400).json({
                 data: {
                     error: "Please provide all the required fields",
@@ -363,8 +363,8 @@ const verify = async (req: Request, res: Response) => {
             }
         });
         if (!tokenData) {
-            logger.warn(`[/verify] - token not found`);
-            logger.debug(`[/verify] - token: ${token}`);
+            logger.warn(`[/auth/verify] - token not found`);
+            logger.debug(`[/auth/verify] - token: ${token}`);
             return res.status(400).json({
                 data: {
                     error: "Token not found",
@@ -377,8 +377,8 @@ const verify = async (req: Request, res: Response) => {
             }
         });
         if (tokenData.expiration < new Date()) {
-            logger.warn(`[/verify] - token expired`);
-            logger.debug(`[/verify] - token: ${token}`);
+            logger.warn(`[/auth/verify] - token expired`);
+            logger.debug(`[/auth/verify] - token: ${token}`);
             return res.status(400).json({
                 data: {
                     error: "Token expired",
@@ -392,8 +392,8 @@ const verify = async (req: Request, res: Response) => {
             }
         });
         if (!user) {
-            logger.warn(`[/verify] - user not found`);
-            logger.debug(`[/verify] - token: sis_id: ${tokenData.sis_id}`);
+            logger.warn(`[/auth/verify] - user not found`);
+            logger.debug(`[/auth/verify] - token: sis_id: ${tokenData.sis_id}`);
             return res.status(400).json({
                 data: {
                     error: "User not found",
@@ -401,8 +401,8 @@ const verify = async (req: Request, res: Response) => {
             });
         }
         if (user.rec_status) {
-            logger.warn(`[/verify] - user already verified`);
-            logger.debug(`[/verify] - userId: ${user.userId}`);
+            logger.warn(`[/auth/verify] - user already verified`);
+            logger.debug(`[/auth/verify] - userId: ${user.userId}`);
             return res.status(400).json({
                 data: {
                     error: "User is already verified",
@@ -418,15 +418,15 @@ const verify = async (req: Request, res: Response) => {
                 rec_status: true
             }
         });
-        logger.info(`[/verify] - success - ${user.userId}`);
-        logger.debug(`[/verify] - userId: ${user.userId}, token: ${token}`);
+        logger.info(`[/auth/verify] - success - ${user.userId}`);
+        logger.debug(`[/auth/verify] - userId: ${user.userId}, token: ${token}`);
         return res.status(200).json({
             data: {
                 message: "User verified successfully",
             }
         });
     } catch (err: any) {
-        logger.error(`[/verify] - ${err.message}`);
+        logger.error(`[/auth/verify] - ${err.message}`);
         return res.status(500).json({
             data: {
                 error: "Something went wrong",
@@ -440,7 +440,7 @@ const refreshAccessToken = async (req: Request, res: Response) => {
     try {
         const { refreshToken } = req.cookies || req.body;
         if (!refreshToken) {
-            logger.warn(`[/refreshAccessToken] - refreshToken not found or invalid token`);
+            logger.warn(`[/auth/refreshAccessToken] - refreshToken not found or invalid token`);
             return res.status(400).json({
                 data: {
                     error: "Refresh token not found or invalid token",
@@ -456,7 +456,7 @@ const refreshAccessToken = async (req: Request, res: Response) => {
             }
         });
         if (!user) {
-            logger.warn(`[/refreshAccessToken] - invalid refresh token`);
+            logger.warn(`[/auth/refreshAccessToken] - invalid refresh token`);
             return res.status(400).json({
                 data: {
                     error: "Invalid refresh token",
@@ -465,7 +465,7 @@ const refreshAccessToken = async (req: Request, res: Response) => {
         }
 
         if (refreshToken !== user.refreshToken) {
-            logger.warn(`[/refreshAccessToken] - invalid refresh token`);
+            logger.warn(`[/auth/refreshAccessToken] - invalid refresh token`);
             return res.status(400).json({
                 data: {
                     error: "Invalid refresh token",
@@ -474,7 +474,7 @@ const refreshAccessToken = async (req: Request, res: Response) => {
         }
 
         const { accessToken, refreshToken: newRefreshToken } = await genAccRefTokens(user.userId);
-        logger.info(`[/refreshAccessToken] - success - ${user.userId}`);
+        logger.info(`[/auth/refreshAccessToken] - success - ${user.userId}`);
         const options = {
             httpOnly: true,
             secure: true
@@ -489,7 +489,7 @@ const refreshAccessToken = async (req: Request, res: Response) => {
                 }
             });
     } catch (err: any) {
-        logger.error(`[/refreshAccessToken] - ${err.message}`);
+        logger.error(`[/auth/refreshAccessToken] - ${err.message}`);
         return res.status(500).json({
             data: {
                 error: "Something went wrong",
