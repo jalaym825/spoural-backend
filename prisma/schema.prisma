@@ -56,7 +56,7 @@ model CricketTeam {
   schedule_team2    CricketSchedule[] @relation("team2")
   winning_team      CricketMatch[]    @relation("winningTeam")
   toss_winning_team CricketMatch[]    @relation("tossWinningTeam")
-
+  player_team       CricketPlayer[]   @relation("playerTeam")
   // @@unique([sis_id, year])
 }
 
@@ -65,6 +65,8 @@ model CricketPlayer {
   // playerId             String         @unique
   userId            String  @unique
   user              User    @relation("playerUser", fields: [userId], references: [userId])
+  teamId            String?
+  isSelected        Boolean @default(false)
   isCaptain         Boolean @default(false)
   isWicketKeeper    Boolean @default(false)
   isAllRounder      Boolean @default(false)
@@ -79,6 +81,7 @@ model CricketPlayer {
   noOfCenturies     Int     @default(0)
 
   matches              CricketMatch[] @relation("playerMatches")
+  team                 CricketTeam?    @relation("playerTeam", fields: [teamId], references: [sis_id])
   user_cricket_players User[]         @relation("cricketPlayer")
   overs                CricketOver[]  @relation("bowler")
   team_players         CricketTeam[] //@relation("playerTeam")

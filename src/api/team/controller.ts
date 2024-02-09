@@ -3,7 +3,7 @@ import prisma from '../../utils/prisma';
 import logger from '../../utils/logger';
 import { isValidEmail } from '../../utils/heplers';
 import axios from 'axios';
-import nodemailer from '../../utils/mailer'
+import mailer from '../../utils/mailer';
 
 function generatePassword(length: number) {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -225,7 +225,7 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
                 players: true
             }
         });
-        await sendAddedToTeamMail(playerEmail, team.name, user.rec_status);
+        await mailer.sendAddedToTeamMail(playerEmail, team.name, user.rec_status);
         logger.info(`[/team/player] - ${player.user.userId} added`);
         return res.status(200).json({ data: { team } });
     } catch (error: any) {
@@ -278,18 +278,6 @@ const getPlayers = async (req: Request, res: Response) => {
                 error: error.message
             }
         });
-    }
-}
-
-const sendAddedToTeamMail = async (email: string, teamName: string, verified: boolean) => {
-    try {
-        const body = {
-            html: `<p>You have been added to the <strong>${teamName}</strong>. Please login to your account to view the team.${verified ? '' : '<br>You will have to verify your email before you can login'}</p>`,
-            // text: `You have been added to the team. Please login to your account to view the team.${verified ? '' : ' You will have to verify your email before you can login'}`
-        }
-        await nodemailer.sendMail([email], 'Added to team', body);
-    } catch (error:any) {
-        logger.error(`[/team/player] - ${error.message}`);
     }
 }
 
