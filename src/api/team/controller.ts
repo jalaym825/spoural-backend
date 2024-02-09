@@ -106,10 +106,10 @@ const getTeams = async (req: Request, res: Response) => {
 
 const addTeam = async (req: Request, res: Response) => {
     try {
-        const { name, year } = req.body;
-        if (!name || !year) {
+        const { name } = req.body;
+        if (!name) {
             logger.warn(`[/team] - data missing`);
-            logger.debug(`[/team] - name: ${name}, year: ${year}`);
+            logger.debug(`[/team] - name: ${name}`);
             return res.status(400).json({
                 data: {
                     error: "Invalid data"
@@ -119,7 +119,7 @@ const addTeam = async (req: Request, res: Response) => {
         const team = await prisma.cricketTeam.create({
             data: {
                 name,
-                year
+                year: new Date(Date.now()).getFullYear().toString()
             }
         });
         logger.info(`[/team] - ${team.name} added`);
