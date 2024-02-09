@@ -64,13 +64,9 @@ model CricketPlayer {
   sis_id            String  @id @default(uuid())
   // playerId             String         @unique
   userId            String  @unique
-<<<<<<< HEAD
   user              Users    @relation("playerUser", fields: [userId], references: [userId])
-=======
-  user              User    @relation("playerUser", fields: [userId], references: [userId])
   teamId            String?
   isSelected        Boolean @default(false)
->>>>>>> 34ce69e77f1c212d7fae96dc77accbc6f4c9a8e8
   isCaptain         Boolean @default(false)
   isWicketKeeper    Boolean @default(false)
   isAllRounder      Boolean @default(false)
@@ -85,12 +81,8 @@ model CricketPlayer {
   noOfCenturies     Int     @default(0)
 
   matches              CricketMatch[] @relation("playerMatches")
-<<<<<<< HEAD
-  user_cricket_players Users[]         @relation("cricketPlayer")
-=======
   team                 CricketTeam?    @relation("playerTeam", fields: [teamId], references: [sis_id])
-  user_cricket_players User[]         @relation("cricketPlayer")
->>>>>>> 34ce69e77f1c212d7fae96dc77accbc6f4c9a8e8
+  user_cricket_players Users[]         @relation("cricketPlayer")
   overs                CricketOver[]  @relation("bowler")
   team_players         CricketTeam[] //@relation("playerTeam")
 }
