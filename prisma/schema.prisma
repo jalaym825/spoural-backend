@@ -13,7 +13,7 @@ enum Role {
   DEPT_SPORTS_CC
 }
 
-model User {
+model Users {
   userId             String              @id @unique
   email              String              @unique
   name               String?
@@ -64,7 +64,7 @@ model CricketPlayer {
   sis_id            String  @id @default(uuid())
   // playerId             String         @unique
   userId            String  @unique
-  user              User    @relation("playerUser", fields: [userId], references: [userId])
+  user              Users    @relation("playerUser", fields: [userId], references: [userId])
   isCaptain         Boolean @default(false)
   isWicketKeeper    Boolean @default(false)
   isAllRounder      Boolean @default(false)
@@ -79,7 +79,7 @@ model CricketPlayer {
   noOfCenturies     Int     @default(0)
 
   matches              CricketMatch[] @relation("playerMatches")
-  user_cricket_players User[]         @relation("cricketPlayer")
+  user_cricket_players Users[]         @relation("cricketPlayer")
   overs                CricketOver[]  @relation("bowler")
   team_players         CricketTeam[] //@relation("playerTeam")
 }
@@ -115,7 +115,7 @@ model VerificationToken {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   expiration DateTime
-  user       User     @relation("verificationToken", fields: [sis_id], references: [userId])
+  user       Users     @relation("verificationToken", fields: [sis_id], references: [userId])
 }
 
 model CricketOver {

@@ -161,20 +161,20 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
                     }
                 });
             }
-            user = await prisma.user.findFirst({
+            user = await prisma.users.findFirst({
                 where: {
                     email: playerEmail
                 }
             });
         } else {
-            user = await prisma.user.findFirst({
+            user = await prisma.users.findFirst({
                 where: {
                     userId: playerId
                 }
             });
         }
         if (!user) {
-            user = await prisma.user.create({
+            user = await prisma.users.create({
                 data: {
                     userId: playerEmail.split('@')[0],
                     email: playerEmail,

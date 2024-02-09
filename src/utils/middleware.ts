@@ -21,7 +21,7 @@ const verifyJWT = async (req: AuthenticatedRequest, res: Response, next: NextFun
     }
     try {
         const payload = await jwt.verify(token.toString(), process.env.JWT_SECRET!) as JwtPayload;
-        const user = await prisma.user.findFirst({
+        const user = await prisma.users.findFirst({
             where: {
                 userId: payload.userId
             }
@@ -90,13 +90,13 @@ const isUser = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
                     }
                 });
             }
-            user = await prisma.user.findFirst({
+            user = await prisma.users.findFirst({
                 where: {
                     email: email.toLowerCase(),
                 },
             });
         } else {
-            user = await prisma.user.findFirst({
+            user = await prisma.users.findFirst({
                 where: {
                     userId: userId,
                 },
@@ -161,7 +161,6 @@ const mailSent = async (req: AuthenticatedRequest, res: Response, next: NextFunc
                 }
             })
         }
-        logger.info(`[/middleWare/mailSent] - verification mail not sent`);
         next();
     } catch (error: any) {
         logger.error(`[/middleware/mailSent] - ${error.message}`);

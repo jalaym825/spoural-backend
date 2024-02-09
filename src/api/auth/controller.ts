@@ -21,7 +21,7 @@ const genAccRefTokens = async (userId: any) => {
             expiresIn: "7d",
         });
 
-        await prisma.user.update({
+        await prisma.users.update({
             where: {
                 userId
             },
@@ -40,6 +40,7 @@ const genAccRefTokens = async (userId: any) => {
 const register = async (req: Request, res: Response) => {
     try {
         const { name, email, userId, password } = req.body;
+        console.log(req.body);
         if (!email || !userId || !password) {
             logger.warn(`[/auth/register] - data missing`);
             logger.debug(`[/auth/register] - email: ${email}, userId: ${userId}`);
@@ -58,7 +59,7 @@ const register = async (req: Request, res: Response) => {
                 }
             });
         }
-        const user = await prisma.user.findFirst({
+        const user = await prisma.users.findFirst({
             where: {
                 email: email.toLowerCase(),
             },
@@ -72,7 +73,7 @@ const register = async (req: Request, res: Response) => {
                 }
             });
         }
-        const user2 = await prisma.user.findFirst({
+        const user2 = await prisma.users.findFirst({
             where: {
                 userId: userId.toLowerCase(),
             },
@@ -89,7 +90,7 @@ const register = async (req: Request, res: Response) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const newUser = await prisma.user.create({
+        const newUser = await prisma.users.create({
             data: {
                 name,
                 email: email.toLowerCase(),
@@ -142,7 +143,7 @@ const login = async (req: Request, res: Response) => {
         }
         let user: any;
         if (!isValidEmail(emailOrUserId)) {
-            user = await prisma.user.findFirst({
+            user = await prisma.users.findFirst({
                 where: {
                     userId: emailOrUserId.toLowerCase(),
                 },
@@ -159,7 +160,7 @@ const login = async (req: Request, res: Response) => {
             }
         }
 
-        user = await prisma.user.findFirst({
+        user = await prisma.users.findFirst({
             where: {
                 email: emailOrUserId.toLowerCase(),
             },
@@ -301,7 +302,7 @@ const logout = async (req: Request, res: Response) => {
                 }
             });
         }
-        const user = await prisma.user.findFirst({
+        const user = await prisma.users.findFirst({
             where: {
                 refreshToken
             }
@@ -314,7 +315,7 @@ const logout = async (req: Request, res: Response) => {
                 }
             });
         }
-        await prisma.user.update({
+        await prisma.users.update({
             where: {
                 userId: user.userId
             },
@@ -386,7 +387,7 @@ const verify = async (req: Request, res: Response) => {
             });
         }
 
-        const user = await prisma.user.findFirst({
+        const user = await prisma.users.findFirst({
             where: {
                 userId: tokenData.sis_id
             }
@@ -410,7 +411,7 @@ const verify = async (req: Request, res: Response) => {
             });
         }
 
-        await prisma.user.update({
+        await prisma.users.update({
             where: {
                 userId: user?.userId
             },
@@ -450,7 +451,7 @@ const refreshAccessToken = async (req: Request, res: Response) => {
 
         const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET!) as JwtPayload;
 
-        const user = await prisma.user.findFirst({
+        const user = await prisma.users.findFirst({
             where: {
                 userId: decoded.userId
             }
