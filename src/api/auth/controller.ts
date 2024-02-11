@@ -12,12 +12,34 @@ interface AuthenticatedRequest extends Request {
     user?: any
 }
 
-const genAccRefTokens = async (userId: any) => {
+// const genAccRefTokens = async (userId: any) => {
+//     try {
+//         const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET!, {
+//             expiresIn: "15m",
+//         });
+//         const refreshToken = jwt.sign({ userId }, process.env.JWT_SECRET!, {
+//             expiresIn: "7d",
+//         });
+
+//         await prisma.users.update({
+//             where: {
+//                 userId
+//             },
+//             data: {
+//                 refreshToken
+//             }
+//         });
+//         logger.info(`[/auht/genAccRefTokens] - success - ${userId}`);
+//         return { accessToken, refreshToken };
+//     } catch (err: any) {
+//         logger.error(`[/auht/genAccRefTokens] - ${err.message}`);
+//         throw new Error("Something went wrong");
+//     }
+// }
+
+const generateToken = async (userId: any) => {
     try {
-        const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET!, {
-            expiresIn: "15m",
-        });
-        const refreshToken = jwt.sign({ userId }, process.env.JWT_SECRET!, {
+        const token = jwt.sign({ userId }, process.env.JWT_SECRET!, {
             expiresIn: "7d",
         });
 
@@ -26,13 +48,13 @@ const genAccRefTokens = async (userId: any) => {
                 userId
             },
             data: {
-                refreshToken
+                token
             }
         });
-        logger.info(`[/auht/genAccRefTokens] - success - ${userId}`);
-        return { accessToken, refreshToken };
+        logger.info(`[/auht/generateToken] - success - ${userId}`);
+        return { token };
     } catch (err: any) {
-        logger.error(`[/auht/genAccRefTokens] - ${err.message}`);
+        logger.error(`[/auht/generateToken] - ${err.message}`);
         throw new Error("Something went wrong");
     }
 }
@@ -188,7 +210,8 @@ const login = async (req: Request, res: Response) => {
             });
         }
 
-        const { refreshToken, accessToken } = await genAccRefTokens(user.userId);
+        const { token } = await generateToken(user.userId);
+        // const { refreshToken, accessToken } = await genAccRefTokens(user.userId);
         logger.info(`[/auth/login] - success - ${user.sis_id}`);
         logger.debug(`[/auth/login] - ${emailOrUserId}`);
 
@@ -202,12 +225,14 @@ const login = async (req: Request, res: Response) => {
         }
 
         return res.status(200)
-            .cookie("accessToken", accessToken, options)
-            .cookie("refreshToken", refreshToken, options)
+            // .cookie("accessToken", accessToken, options)
+            // .cookie("refreshToken", refreshToken, options)
             .json({
                 data: {
                     user: _user,
-                    accessToken, refreshToken
+                    token,
+                    // accessToken,
+                    // refreshToken
                 },
             });
     }
@@ -293,18 +318,18 @@ const sendVerificationMail = async (req: AuthenticatedRequest, res: Response) =>
 
 const logout = async (req: Request, res: Response) => {
     try {
-        const { refreshToken } = req.cookies;
-        if (!refreshToken) {
-            logger.warn(`[/auth/logout] - refreshToken not found`);
+        const { token } = req.cookies;
+        if (!token) {
+            logger.warn(`[/auth/logout] - token not found`);
             return res.status(400).json({
                 data: {
-                    error: "Refresh token not found",
+                    error: "Token not found",
                 }
             });
         }
         const user = await prisma.users.findFirst({
             where: {
-                refreshToken
+                token
             }
         });
         if (!user) {
@@ -320,7 +345,7 @@ const logout = async (req: Request, res: Response) => {
                 userId: user.userId
             },
             data: {
-                refreshToken: null
+                token: null
             }
         });
         logger.info(`[/auth/logout] - success - ${user.userId}`);
@@ -437,67 +462,67 @@ const verify = async (req: Request, res: Response) => {
 }
 
 
-const refreshAccessToken = async (req: Request, res: Response) => {
-    try {
-        const { refreshToken } = req.cookies || req.body;
-        if (!refreshToken) {
-            logger.warn(`[/auth/refreshAccessToken] - refreshToken not found or invalid token`);
-            return res.status(400).json({
-                data: {
-                    error: "Refresh token not found or invalid token",
-                }
-            });
-        }
+// const refreshAccessToken = async (req: Request, res: Response) => {
+//     try {
+//         const { refreshToken } = req.cookies || req.body;
+//         if (!refreshToken) {
+//             logger.warn(`[/auth/refreshAccessToken] - refreshToken not found or invalid token`);
+//             return res.status(400).json({
+//                 data: {
+//                     error: "Refresh token not found or invalid token",
+//                 }
+//             });
+//         }
 
-        const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET!) as JwtPayload;
+//         const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET!) as JwtPayload;
 
-        const user = await prisma.users.findFirst({
-            where: {
-                userId: decoded.userId
-            }
-        });
-        if (!user) {
-            logger.warn(`[/auth/refreshAccessToken] - invalid refresh token`);
-            return res.status(400).json({
-                data: {
-                    error: "Invalid refresh token",
-                }
-            });
-        }
+//         const user = await prisma.users.findFirst({
+//             where: {
+//                 userId: decoded.userId
+//             }
+//         });
+//         if (!user) {
+//             logger.warn(`[/auth/refreshAccessToken] - invalid refresh token`);
+//             return res.status(400).json({
+//                 data: {
+//                     error: "Invalid refresh token",
+//                 }
+//             });
+//         }
 
-        if (refreshToken !== user.refreshToken) {
-            logger.warn(`[/auth/refreshAccessToken] - invalid refresh token`);
-            return res.status(400).json({
-                data: {
-                    error: "Invalid refresh token",
-                }
-            });
-        }
+//         if (refreshToken !== user.refreshToken) {
+//             logger.warn(`[/auth/refreshAccessToken] - invalid refresh token`);
+//             return res.status(400).json({
+//                 data: {
+//                     error: "Invalid refresh token",
+//                 }
+//             });
+//         }
 
-        const { accessToken, refreshToken: newRefreshToken } = await genAccRefTokens(user.userId);
-        logger.info(`[/auth/refreshAccessToken] - success - ${user.userId}`);
-        const options = {
-            httpOnly: true,
-            secure: true
-        }
-        return res.status(200)
-            .cookie("accessToken", accessToken, options)
-            .cookie("refreshToken", newRefreshToken, options)
-            .json({
-                data: {
-                    accessToken, refreshToken: newRefreshToken,
-                    mesage: `Access token refreshed successfully`
-                }
-            });
-    } catch (err: any) {
-        logger.error(`[/auth/refreshAccessToken] - ${err.message}`);
-        return res.status(500).json({
-            data: {
-                error: "Something went wrong",
-            }
-        });
-    }
-}
+//         const { accessToken, refreshToken: newRefreshToken } = await genAccRefTokens(user.userId);
+//         logger.info(`[/auth/refreshAccessToken] - success - ${user.userId}`);
+//         const options = {
+//             httpOnly: true,
+//             secure: true
+//         }
+//         return res.status(200)
+//             .cookie("accessToken", accessToken, options)
+//             .cookie("refreshToken", newRefreshToken, options)
+//             .json({
+//                 data: {
+//                     accessToken, refreshToken: newRefreshToken,
+//                     mesage: `Access token refreshed successfully`
+//                 }
+//             });
+//     } catch (err: any) {
+//         logger.error(`[/auth/refreshAccessToken] - ${err.message}`);
+//         return res.status(500).json({
+//             data: {
+//                 error: "Something went wrong",
+//             }
+//         });
+//     }
+// }
 
 
-export default { login, register, sendVerificationMail, logout, verify, refreshAccessToken };
+export default { login, register, sendVerificationMail, logout, verify };

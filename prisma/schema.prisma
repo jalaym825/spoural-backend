@@ -18,7 +18,7 @@ model Users {
   email              String              @unique
   name               String?
   password           String?
-  refreshToken       String?
+  token              String?
   role               Role                @default(USER)
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
@@ -64,7 +64,7 @@ model CricketPlayer {
   sis_id            String  @id @default(uuid())
   // playerId             String         @unique
   userId            String  @unique
-  user              Users    @relation("playerUser", fields: [userId], references: [userId])
+  user              Users   @relation("playerUser", fields: [userId], references: [userId])
   teamId            String?
   isSelected        Boolean @default(false)
   isCaptain         Boolean @default(false)
@@ -81,8 +81,8 @@ model CricketPlayer {
   noOfCenturies     Int     @default(0)
 
   matches              CricketMatch[] @relation("playerMatches")
-  team                 CricketTeam?    @relation("playerTeam", fields: [teamId], references: [sis_id])
-  user_cricket_players Users[]         @relation("cricketPlayer")
+  team                 CricketTeam?   @relation("playerTeam", fields: [teamId], references: [sis_id])
+  user_cricket_players Users[]        @relation("cricketPlayer")
   overs                CricketOver[]  @relation("bowler")
   team_players         CricketTeam[] //@relation("playerTeam")
 }
@@ -118,7 +118,7 @@ model VerificationToken {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   expiration DateTime
-  user       Users     @relation("verificationToken", fields: [sis_id], references: [userId])
+  user       Users    @relation("verificationToken", fields: [sis_id], references: [userId])
 }
 
 model CricketOver {
