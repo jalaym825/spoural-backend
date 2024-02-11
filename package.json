@@ -11,7 +11,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@prisma/client": "^5.8.0",
+    "@prisma/client": "^5.9.1",
     "axios": "^1.6.5",
     "bcrypt": "^5.1.1",
     "colors": "^1.4.0",
@@ -42,7 +42,7 @@
     "@types/nodemailer": "^6.4.14",
     "@types/socket.io": "^3.0.2",
     "@types/swagger-ui-express": "^4.1.6",
-    "prisma": "^5.8.0",
+    "prisma": "^5.9.1",
     "typescript": "^5.3.3"
   }
 }

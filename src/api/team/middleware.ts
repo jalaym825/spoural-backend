@@ -7,7 +7,7 @@ interface AuthenticatedRequest extends Request {
     user?: any
 }
 const verifyJWT = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const token = req.cookies?.accessToken || req.header("Authorization")?.split(" ")[1];
+    const token = req.cookies?.token || req.header("Authorization")?.split(" ")[1];
     if (!token) {
         logger.warn(`[/matches] - token missing`);
         logger.debug(`[/matches] - token: ${token}`);

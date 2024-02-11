@@ -116,9 +116,25 @@ const addTeam = async (req: Request, res: Response) => {
                 }
             });
         }
+        const exist = await prisma.cricketTeam.findFirst({
+            where: {
+                name: name.toLowerCase()
+            }
+        })
+        if(exist)
+        {
+            logger.warn(`[/team/addTeam] - team already exists`);
+            logger.debug(`[/team/addTeam] - team: ${name}, ${exist.sis_id}`);
+            return res.status(400).json({
+                data: {
+                    error: "Team already exists",
+                }
+            });
+        }
+
         const team = await prisma.cricketTeam.create({
             data: {
-                name,
+                name: name.toLowerCase(),
                 year: new Date(Date.now()).getFullYear().toString()
             }
         });

@@ -62,7 +62,6 @@ const generateToken = async (userId: any) => {
 const register = async (req: Request, res: Response) => {
     try {
         const { name, email, userId, password } = req.body;
-        console.log(req.body);
         if (!email || !userId || !password) {
             logger.warn(`[/auth/register] - data missing`);
             logger.debug(`[/auth/register] - email: ${email}, userId: ${userId}`);
@@ -141,7 +140,6 @@ const register = async (req: Request, res: Response) => {
             }
         });
     } catch (err: any) {
-        console.log(err);
         logger.error(`[/auth/register] - ${err.message}`);
         return res.status(500).json({
             data: {
@@ -306,7 +304,6 @@ const sendVerificationMail = async (req: AuthenticatedRequest, res: Response) =>
             });
         });
     } catch (err: any) {
-        console.log(err);
         logger.error(`[/auth/sendVerificationMail] - ${err.message}`);
         return res.status(500).json({
             data: {
@@ -524,5 +521,21 @@ const verify = async (req: Request, res: Response) => {
 //     }
 // }
 
+const getUser = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        return res.status(200).json({
+            data: {
+                user: req.user
+            }
+        })
+    } catch (err: any) {
+        logger.error(`[/auth/getUser] - ${err.message}`);
+        return res.status(500).json({
+            data: {
+                error: "Something went wrong",
+            }
+        });
+    }
+}
 
-export default { login, register, sendVerificationMail, logout, verify };
+export default { login, register, sendVerificationMail, logout, verify, getUser };
