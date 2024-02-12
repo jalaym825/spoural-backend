@@ -18,13 +18,24 @@ const verifyJWT = async (req: AuthenticatedRequest, res: Response, next: NextFun
         });
     }
     try {
-        const payload = await jwt.verify(token.toString(), process.env.JWT_SECRET!) as JwtPayload;
+        let payload: JwtPayload;
+        try {
+            payload = await jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+        } catch (error) {
+            logger.error(`[/matches] - Invalid token: ${error.message}`);
+            return res.status(401).json({
+                data: {
+                    error: 'Invalid token.'
+                }
+            });
+        }
+
         const user = await prisma.users.findFirst({
             where: {
                 userId: payload.userId
             }
         });
-        
+
         if (!user) {
             logger.warn(`[/matches] - user not found`);
             return res.status(401).json({
