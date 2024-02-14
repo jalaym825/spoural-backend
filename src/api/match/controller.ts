@@ -13,7 +13,7 @@ const getMatches = async (req: Request, res: Response) => {
             });
         }
 
-        const matches = await prisma.cricketSchedule.findMany({
+        const matches = await prisma.cricketMatch.findMany({
             where: {
                 year: year as string
             },
@@ -21,12 +21,8 @@ const getMatches = async (req: Request, res: Response) => {
                 date: 'desc'
             },
             include: {
-                match: {
-                    include: {
-                        team1: true,
-                        team2: true
-                    }
-                }
+                team1: true,
+                team2: true
             }
         });
         logger.info(`[/matches] - ${matches.length} matches found`);
@@ -44,10 +40,13 @@ const getMatches = async (req: Request, res: Response) => {
 
 const addMatch = async (req: Request, res: Response) => {
     try {
-        const { year, date, team1Id, team2Id, venue } = req.body;
-        if (!year || !date || !team1Id || !team2Id || !venue) {
+        const { date, team1Id, team2Id } = req.body;
+        // const { date, team1Id, team2Id, venue } = req.body;
+        if (!date || !team1Id || !team2Id) {
+            // if (!date || !team1Id || !team2Id || !venue) {
             logger.warn(`[/matches] - data missing`);
-            logger.debug(`[/matches] - year: ${year}, date: ${date}, team1Id: ${team1Id}, team2Id: ${team2Id}, venue: ${venue}`);
+            logger.debug(`[/matches] - date: ${date}, team1Id: ${team1Id}, team2Id: ${team2Id}`);
+            // logger.debug(`[/matches] - date: ${date}, team1Id: ${team1Id}, team2Id: ${team2Id}, venue: ${venue}`);
             return res.status(400).json({
                 error: "Invalid data"
             });
@@ -58,25 +57,25 @@ const addMatch = async (req: Request, res: Response) => {
                 date,
                 team1Id,
                 team2Id,
-                venue,
+                year: new Date(date).getFullYear().toString(),
+                // venue,
             }
         });
 
         logger.info(`[/matches] - match added, match: ${match.sis_id}`);
-        const shcedule = await prisma.cricketSchedule.create({
-            data: {
-                sis_id: match.sis_id,
-                year,
-                date,
-                team1Id,
-                team2Id,
-                // matchId: match.sis_id
-            }
-        });
-        logger.info(`[/matches] - match schedule added, schedule: ${shcedule.sis_id}`);
+        // const shcedule = await prisma.cricketSchedule.create({
+        //     data: {
+        //         sis_id: match.sis_id,
+        //         year: new Date(Date.now()).getFullYear().toString(),
+        //         date,
+        //         team1Id,
+        //         team2Id,
+        //     }
+        // });
+        // logger.info(`[/matches] - match schedule added, schedule: ${shcedule.sis_id}`);
 
         return res.status(200).json({
-                match
+            match
         });
     } catch (error: any) {
         logger.error(`[/matches] - ${error.message}`);
@@ -111,7 +110,7 @@ const startMatch = async (req: CustomRequest, res: Response) => {
         logger.info(`[/matches] - match started, match: ${match.sis_id}`);
 
         return res.status(200).json({
-                match
+            match
         });
     } catch (error: any) {
         logger.error(`[/matches] - ${error.message}`);

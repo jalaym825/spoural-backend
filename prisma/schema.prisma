@@ -29,18 +29,18 @@ model Users {
   verification_token VerificationToken[] @relation("verificationToken")
 }
 
-model CricketSchedule {
-  sis_id        String       @id @default(uuid())
-  // matchId       String       @unique
-  match         CricketMatch @relation("scheduleMatches", fields: [sis_id], references: [sis_id])
-  team1Id       String
-  team1         CricketTeam  @relation("team1", fields: [team1Id], references: [sis_id])
-  team2Id       String
-  team2         CricketTeam  @relation("team2", fields: [team2Id], references: [sis_id])
-  dependendency Boolean      @default(false)
-  date          DateTime
-  year          String
-}
+// model CricketSchedule {
+//   sis_id        String       @id @default(uuid())
+//   // matchId       String       @unique
+//   match         CricketMatch @relation("scheduleMatches", fields: [sis_id], references: [sis_id])
+//   team1Id       String
+//   team1         CricketTeam  @relation("team1", fields: [team1Id], references: [sis_id])
+//   team2Id       String
+//   team2         CricketTeam  @relation("team2", fields: [team2Id], references: [sis_id])
+//   dependendency Boolean      @default(false)
+//   date          DateTime
+//   year          String
+// }
 
 model CricketTeam {
   sis_id String @id @default(uuid())
@@ -52,8 +52,8 @@ model CricketTeam {
   players           CricketPlayer[] //   @relation("playerTeam", fields: [playerIds], references: [sis_id])
   team2_matches     CricketMatch[]    @relation("team2")
   team1_matches     CricketMatch[]    @relation("team1")
-  schedule_team1    CricketSchedule[] @relation("team1")
-  schedule_team2    CricketSchedule[] @relation("team2")
+  // schedule_team1    CricketSchedule[] @relation("team1")
+  // schedule_team2    CricketSchedule[] @relation("team2")
   winning_team      CricketMatch[]    @relation("winningTeam")
   toss_winning_team CricketMatch[]    @relation("tossWinningTeam")
   player_team       CricketPlayer[]   @relation("playerTeam")
@@ -95,7 +95,10 @@ model CricketMatch {
   tossWonByTeam CricketTeam? @relation("tossWinningTeam", fields: [tossWonBy], references: [sis_id])
   tossDecision  String?
   date          DateTime
-  venue         String
+  venue         String?
+  year          String
+  dependency    Boolean      @default(false)
+  dependentOn   String?
 
   wonBy     String?
   wonByTeam CricketTeam? @relation("winningTeam", fields: [wonBy], references: [sis_id])
@@ -106,7 +109,7 @@ model CricketMatch {
   team2   CricketTeam @relation("team2", fields: [team2Id], references: [sis_id])
 
   players            CricketPlayer[]                  @relation("playerMatches")
-  schedule_matches   CricketSchedule?                 @relation("scheduleMatches")
+  // schedule_matches   CricketSchedule?                 @relation("scheduleMatches")
   over_match         CricketOver[]                    @relation("match")
   team_batting_score CricketMatchPlayerBattingScore[] @relation("playerBattingScoreMatch")
   team_bowling_score CricketMatchPlayerBowlingScore[] @relation("playerBowlingScoreMatch")
