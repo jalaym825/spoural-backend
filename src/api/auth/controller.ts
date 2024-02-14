@@ -277,7 +277,7 @@ const sendVerificationMail = async (req: AuthenticatedRequest, res: Response) =>
 
 const logout = async (req: Request, res: Response) => {
     try {
-        const { token } = req.cookies;
+        const token = req.cookies?.token || req.header("Authorization")?.split(" ")[1];
         if (!token) {
             logger.warn(`[/auth/logout] - token not found`);
             return res.status(400).json({
@@ -290,9 +290,9 @@ const logout = async (req: Request, res: Response) => {
             }
         });
         if (!user) {
-            logger.warn(`[/auth/logout] - user not found`);
+            logger.warn(`[/auth/logout] - Invalid token`);
             return res.status(400).json({
-                error: "User not found",
+                error: "Invalid token",
             });
         }
         await prisma.users.update({
@@ -309,8 +309,6 @@ const logout = async (req: Request, res: Response) => {
             secure: true
         }
         return res.status(200)
-            .clearCookie("accessToken", options)
-            .clearCookie("refreshToken", options)
             .json({
                 message: "User logged out successfully",
             });
