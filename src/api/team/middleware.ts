@@ -12,21 +12,17 @@ const verifyJWT = async (req: AuthenticatedRequest, res: Response, next: NextFun
         logger.warn(`[/matches] - token missing`);
         logger.debug(`[/matches] - token: ${token}`);
         return res.status(401).json({
-            data: {
                 error: 'No token provided.'
-            }
         });
     }
     try {
         let payload: JwtPayload;
         try {
             payload = await jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
-        } catch (error) {
+        } catch (error: any) {
             logger.error(`[/matches] - Invalid token: ${error.message}`);
             return res.status(401).json({
-                data: {
                     error: 'Invalid token.'
-                }
             });
         }
 
@@ -39,9 +35,7 @@ const verifyJWT = async (req: AuthenticatedRequest, res: Response, next: NextFun
         if (!user) {
             logger.warn(`[/matches] - user not found`);
             return res.status(401).json({
-                data: {
                     error: 'Invalid access token.'
-                }
             });
         }
         logger.info(`[/matches] - user: ${user?.userId} authenticated`);
@@ -61,9 +55,7 @@ const isSportsHead = async (req: AuthenticatedRequest, res: Response, next: Next
         if (req.user.role !== 'SPORTS_HEAD') {
             logger.warn(`[/matches] - unauthorized access by user: ${req.user.userId}`);
             return res.status(401).json({
-                data: {
                     error: 'Unauthorized access.'
-                }
             });
         }
         logger.info(`[/matches] - user: ${req.user.userId} authorized`);

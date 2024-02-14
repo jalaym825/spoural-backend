@@ -66,18 +66,14 @@ const register = async (req: Request, res: Response) => {
             logger.warn(`[/auth/register] - data missing`);
             logger.debug(`[/auth/register] - email: ${email}, userId: ${userId}`);
             return res.status(400).json({
-                data: {
-                    error: "Please provide all the required fields",
-                }
+                error: "Please provide all the required fields",
             });
         }
         if (!isValidEmail(email)) {
             logger.warn(`[/auth/register] - invalid email`);
             logger.debug(`[/auth/register] - email: ${email}`);
             return res.status(400).json({
-                data: {
-                    error: "Please provide a valid email",
-                }
+                error: "Please provide a valid email",
             });
         }
         const user = await prisma.users.findFirst({
@@ -89,9 +85,7 @@ const register = async (req: Request, res: Response) => {
             logger.warn(`[/auth/register] - email already exists`);
             logger.debug(`[/auth/register] - email: ${email}`);
             return res.status(400).json({
-                data: {
-                    error: "Email already exists",
-                }
+                error: "Email already exists",
             });
         }
         const user2 = await prisma.users.findFirst({
@@ -103,9 +97,7 @@ const register = async (req: Request, res: Response) => {
             logger.warn(`[/auth/register] - userId already exists`);
             logger.debug(`[/auth/register] - userId: ${userId}`);
             return res.status(400).json({
-                data: {
-                    error: "UserId already exists",
-                }
+                error: "UserId already exists",
             });
         }
         const salt = await bcrypt.genSalt(10);
@@ -128,23 +120,17 @@ const register = async (req: Request, res: Response) => {
         });
         if (res1.data.error) {
             return res.status(500).json({
-                data: {
-                    error: res1.data.error
-                }
+                error: res1.data.error
             });
         }
         return res.status(200).json({
-            data: {
-                user: newUser,
-                message: "User created successfully",
-            }
+            user: newUser,
+            message: "User created successfully",
         });
     } catch (err: any) {
         logger.error(`[/auth/register] - ${err.message}`);
         return res.status(500).json({
-            data: {
-                error: "Something went wrong",
-            }
+            error: "Something went wrong",
         });
     }
 }
@@ -156,9 +142,7 @@ const login = async (req: Request, res: Response) => {
             logger.warn(`[/auth/login] - data missing`);
             logger.debug(`[/auth/login] - emailOrUserId: ${emailOrUserId}`);
             return res.status(400).json({
-                data: {
-                    error: "Please provide all the required fields",
-                }
+                error: "Please provide all the required fields",
             });
         }
         let user: any;
@@ -172,10 +156,7 @@ const login = async (req: Request, res: Response) => {
                 logger.warn("[/auth/login]: emailOrUserId invalid");
                 logger.debug(`[/auth/login] - emailOrUserId: ${emailOrUserId}`);
                 return res.status(400).json({
-                    data:
-                    {
-                        error: "Please provide a valid emailOrUserId",
-                    }
+                    error: "Please provide a valid emailOrUserId",
                 });
             }
         }
@@ -190,10 +171,7 @@ const login = async (req: Request, res: Response) => {
             logger.warn("[/auth/login]: user not found");
             logger.debug(`[/auth/login] - emailOrUserId: ${emailOrUserId}`);
             return res.status(400).json({
-                data:
-                {
-                    error: "User not found",
-                }
+                error: "User not found",
             });
         }
         const isMatch = await bcrypt.compare(password, user.password);
@@ -201,10 +179,7 @@ const login = async (req: Request, res: Response) => {
             logger.warn(`[/auth/login] - incorrect userId/email or password`);
             logger.debug(`[/auth/login] - ${emailOrUserId}`);
             return res.status(400).json({
-                data:
-                {
-                    error: "Incorrect username or password",
-                }
+                error: "Incorrect username or password",
             });
         }
 
@@ -226,21 +201,16 @@ const login = async (req: Request, res: Response) => {
             // .cookie("accessToken", accessToken, options)
             // .cookie("refreshToken", refreshToken, options)
             .json({
-                data: {
-                    user: _user,
-                    token,
-                    // accessToken,
-                    // refreshToken
-                },
+                user: _user,
+                token,
+                // accessToken,
+                // refreshToken
             });
     }
     catch (err: any) {
         logger.error(`[/auth/login] - ${err.message}`);
         return res.status(500).json({
-            data:
-            {
-                error: "Something went wrong",
-            }
+            error: "Something went wrong",
         });
     }
 }
@@ -257,9 +227,7 @@ const sendVerificationMail = async (req: AuthenticatedRequest, res: Response) =>
             logger.warn(`[/auth/sendVerificationMail] - verification mail already sent`);
             logger.debug(`[/auth/sendVerificationMail] - email: ${req.user.email}`);
             return res.status(400).json({
-                data: {
-                    error: `Verification mail already sent, you can resend it after ${Number(tokenData.expiration) - Date.now()} ms`,
-                }
+                error: `Verification mail already sent, you can resend it after ${Number(tokenData.expiration) - Date.now()} ms`,
             })
         }
 
@@ -291,24 +259,18 @@ const sendVerificationMail = async (req: AuthenticatedRequest, res: Response) =>
             delete req.user.refreshToken;
             delete req.user.password;
             return res.status(200).json({
-                data: {
-                    user: req.user,
-                    message: "Verification mail sent",
-                }
+                user: req.user,
+                message: "Verification mail sent",
             });
         }).catch((_err) => {
-            return res.status(200).json({
-                data: {
-                    message: "Error in sending mail",
-                }
+            return res.status(400).json({
+                error: "Error in sending mail",
             });
         });
     } catch (err: any) {
         logger.error(`[/auth/sendVerificationMail] - ${err.message}`);
         return res.status(500).json({
-            data: {
-                error: "Something went wrong",
-            }
+            error: "Something went wrong",
         });
     }
 }
@@ -319,9 +281,7 @@ const logout = async (req: Request, res: Response) => {
         if (!token) {
             logger.warn(`[/auth/logout] - token not found`);
             return res.status(400).json({
-                data: {
-                    error: "Token not found",
-                }
+                error: "Token not found",
             });
         }
         const user = await prisma.users.findFirst({
@@ -332,9 +292,7 @@ const logout = async (req: Request, res: Response) => {
         if (!user) {
             logger.warn(`[/auth/logout] - user not found`);
             return res.status(400).json({
-                data: {
-                    error: "User not found",
-                }
+                error: "User not found",
             });
         }
         await prisma.users.update({
@@ -354,16 +312,12 @@ const logout = async (req: Request, res: Response) => {
             .clearCookie("accessToken", options)
             .clearCookie("refreshToken", options)
             .json({
-                data: {
-                    message: "User logged out successfully",
-                }
+                message: "User logged out successfully",
             });
     } catch (err: any) {
         logger.error(`[/auth/logout] - ${err.message}`);
         return res.status(500).json({
-            data: {
-                error: "Something went wrong",
-            }
+            error: "Something went wrong",
         });
     }
 }
@@ -375,9 +329,7 @@ const verify = async (req: Request, res: Response) => {
             logger.warn(`[/auth/verify] - data missing`);
             logger.debug(`[/auth/verify] - token: ${token}`);
             return res.status(400).json({
-                data: {
-                    error: "Please provide all the required fields",
-                }
+                error: "Please provide all the required fields",
             });
         }
         const tokenData = await prisma.verificationToken.findFirst({
@@ -389,9 +341,7 @@ const verify = async (req: Request, res: Response) => {
             logger.warn(`[/auth/verify] - token not found`);
             logger.debug(`[/auth/verify] - token: ${token}`);
             return res.status(400).json({
-                data: {
-                    error: "Token not found",
-                }
+                error: "Token not found",
             });
         }
         await prisma.verificationToken.delete({
@@ -403,9 +353,7 @@ const verify = async (req: Request, res: Response) => {
             logger.warn(`[/auth/verify] - token expired`);
             logger.debug(`[/auth/verify] - token: ${token}`);
             return res.status(400).json({
-                data: {
-                    error: "Token expired",
-                }
+                error: "Token expired",
             });
         }
 
@@ -418,18 +366,14 @@ const verify = async (req: Request, res: Response) => {
             logger.warn(`[/auth/verify] - user not found`);
             logger.debug(`[/auth/verify] - token: sis_id: ${tokenData.sis_id}`);
             return res.status(400).json({
-                data: {
-                    error: "User not found",
-                }
+                error: "User not found",
             });
         }
         if (user.rec_status) {
             logger.warn(`[/auth/verify] - user already verified`);
             logger.debug(`[/auth/verify] - userId: ${user.userId}`);
             return res.status(400).json({
-                data: {
-                    error: "User is already verified",
-                }
+                error: "User is already verified",
             });
         }
 
@@ -444,16 +388,12 @@ const verify = async (req: Request, res: Response) => {
         logger.info(`[/auth/verify] - success - ${user.userId}`);
         logger.debug(`[/auth/verify] - userId: ${user.userId}, token: ${token}`);
         return res.status(200).json({
-            data: {
-                message: "User verified successfully",
-            }
+            message: "User verified successfully",
         });
     } catch (err: any) {
         logger.error(`[/auth/verify] - ${err.message}`);
         return res.status(500).json({
-            data: {
-                error: "Something went wrong",
-            }
+            error: "Something went wrong",
         });
     }
 }
@@ -524,16 +464,12 @@ const verify = async (req: Request, res: Response) => {
 const getUser = async (req: AuthenticatedRequest, res: Response) => {
     try {
         return res.status(200).json({
-            data: {
-                user: req.user
-            }
+            user: req.user
         })
     } catch (err: any) {
         logger.error(`[/auth/getUser] - ${err.message}`);
         return res.status(500).json({
-            data: {
-                error: "Something went wrong",
-            }
+            error: "Something went wrong",
         });
     }
 }

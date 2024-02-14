@@ -8,9 +8,7 @@ const verificationMailLimiter = ratelimit({
     windowMs: 3.6e+6, // 1 hour
     max: 5, // 5 requests per hour
     message: {
-        data: {
-            error: "Too many requests, please try again later.",
-        }
+        error: "Too many requests, please try again later.",
     }
 });
 router.put('/verify/:token', controller.verify);

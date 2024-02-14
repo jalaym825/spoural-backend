@@ -35,9 +35,7 @@ const getTeam = async (req: Request, res: Response) => {
             logger.warn(`[/team/:id] - data missing`);
             logger.debug(`[/team/:id] - id: ${id}`);
             return res.status(400).json({
-                data: {
-                    error: "Invalid id"
-                }
+                error: "Invalid id"
             });
         }
         const team = await prisma.cricketTeam.findFirst({
@@ -52,19 +50,15 @@ const getTeam = async (req: Request, res: Response) => {
             logger.warn(`[/team/:id] - team not found`);
             logger.debug(`[/team/:id] - id: ${id}`);
             return res.status(404).json({
-                data: {
-                    error: "Team not found"
-                }
+                error: "Team not found"
             });
         }
         logger.info(`[/team/:id] - ${team.name} found`);
-        return res.status(200).json({ data: { team } });
+        return res.status(200).json({ team });
     } catch (error: any) {
         logger.error(`[/team/:id] - ${error.message}`);
         return res.status(500).json({
-            data: {
-                error: error.message
-            }
+            error: error.message
         });
     }
 }
@@ -76,9 +70,7 @@ const getTeams = async (req: Request, res: Response) => {
             logger.warn(`[/team] - data missing`);
             logger.debug(`[/team] - year: ${year}`);
             return res.status(400).json({
-                data: {
-                    error: "Invalid year"
-                }
+                error: "Invalid year"
             });
         }
         const teams = await prisma.cricketTeam.findMany({
@@ -93,13 +85,11 @@ const getTeams = async (req: Request, res: Response) => {
             }
         });
         logger.info(`[/team] - ${teams.length} teams found`);
-        return res.status(200).json({ data: { teams } });
+        return res.status(200).json({ teams });
     } catch (error: any) {
         logger.error(`[/team] - ${error.message}`);
         return res.status(500).json({
-            data: {
-                error: error.message
-            }
+            error: error.message
         });
     }
 }
@@ -111,9 +101,7 @@ const addTeam = async (req: Request, res: Response) => {
             logger.warn(`[/team] - data missing`);
             logger.debug(`[/team] - name: ${name}`);
             return res.status(400).json({
-                data: {
-                    error: "Invalid data"
-                }
+                error: "Invalid data"
             });
         }
         const exist = await prisma.cricketTeam.findFirst({
@@ -121,14 +109,11 @@ const addTeam = async (req: Request, res: Response) => {
                 name: name.toLowerCase()
             }
         })
-        if(exist)
-        {
+        if (exist) {
             logger.warn(`[/team/addTeam] - team already exists`);
             logger.debug(`[/team/addTeam] - team: ${name}, ${exist.sis_id}`);
             return res.status(400).json({
-                data: {
-                    error: "Team already exists",
-                }
+                error: "Team already exists",
             });
         }
 
@@ -139,13 +124,11 @@ const addTeam = async (req: Request, res: Response) => {
             }
         });
         logger.info(`[/team] - ${team.name} added`);
-        return res.status(200).json({ data: { team } });
+        return res.status(200).json({ team });
     } catch (error: any) {
         logger.error(`[/team] - ${error.message}`);
         return res.status(500).json({
-            data: {
-                error: error.message
-            }
+            error: error.message
         });
     }
 }
@@ -161,9 +144,7 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
             logger.warn(`[/team/player] - data missing`);
             logger.debug(`[/team/player] - teamId: ${teamId}`);
             return res.status(400).json({
-                data: {
-                    error: "Invalid data"
-                }
+                error: "Invalid data"
             });
         }
         let user: any;
@@ -172,9 +153,7 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
                 logger.warn(`[/team/player] - invalid email`);
                 logger.debug(`[/team/player] - email: ${playerEmail}`);
                 return res.status(400).json({
-                    data: {
-                        error: "Invalid email"
-                    }
+                    error: "Invalid email"
                 });
             }
             user = await prisma.users.findFirst({
@@ -202,10 +181,9 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
                 email: playerEmail
             });
         }
-        let player:any;
-        if(!playerId)
-        {
-            player  = await prisma.cricketPlayer.create({
+        let player: any;
+        if (!playerId) {
+            player = await prisma.cricketPlayer.create({
                 data: {
                     userId: user.userId,
                 },
@@ -214,8 +192,7 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
                 }
             })
         }
-        else
-        {
+        else {
             player = await prisma.cricketPlayer.findFirst({
                 where: {
                     sis_id: playerId
@@ -225,7 +202,7 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
                 }
             });
         }
-        
+
         const team = await prisma.cricketTeam.update({
             where: {
                 sis_id: teamId
@@ -243,14 +220,12 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
         });
         await mailer.sendAddedToTeamMail(playerEmail, team.name, user.rec_status);
         logger.info(`[/team/player] - ${player.user.userId} added`);
-        return res.status(200).json({ data: { team } });
+        return res.status(200).json({ team });
     } catch (error: any) {
         // console.log(error);
         logger.error(`[/team/player] - ${error.message}`);
         return res.status(500).json({
-            data: {
-                error: error.message
-            }
+            error: error.message
         });
     }
 }
@@ -262,9 +237,7 @@ const getPlayers = async (req: Request, res: Response) => {
             logger.warn(`[/team/:id/players] - data missing`);
             logger.debug(`[/team/:id/players] - id: ${id}`);
             return res.status(400).json({
-                data: {
-                    error: "Invalid id"
-                }
+                error: "Invalid id"
             });
         }
         const team = await prisma.cricketTeam.findFirst({
@@ -280,19 +253,15 @@ const getPlayers = async (req: Request, res: Response) => {
             logger.warn(`[/team/:id/players] - team not found`);
             logger.debug(`[/team/:id/players] - id: ${id}`);
             return res.status(404).json({
-                data: {
-                    error: "Team not found"
-                }
+                error: "Team not found"
             });
         }
         logger.info(`[/team/:id/players] - ${team.name} found`);
-        return res.status(200).json({ data: { players: team.players } });
+        return res.status(200).json({ players: team.players });
     } catch (error: any) {
         logger.error(`[/team/:id/players] - ${error.message}`);
         return res.status(500).json({
-            data: {
-                error: error.message
-            }
+            error: error.message
         });
     }
 }

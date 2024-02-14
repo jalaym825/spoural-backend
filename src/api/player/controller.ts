@@ -15,9 +15,7 @@ const getPlayer = async (req: Request, res: Response) => {
             logger.warn(`[/player] - data missing`);
             logger.debug(`[/player] - id: ${id}`);
             return res.status(400).json({
-                data: {
-                    error: "Invalid id"
-                }
+                error: "Invalid id"
             });
         }
 
@@ -29,16 +27,12 @@ const getPlayer = async (req: Request, res: Response) => {
         logger.info(`[/player] - player found`);
 
         return res.status(200).json({
-            data: {
-                player
-            }
+            player
         });
     } catch (error: any) {
         logger.error(`[/player] - ${error.message}`);
         return res.status(500).json({
-            data: {
-                error: error.message
-            }
+            error: error.message
         });
     }
 }
@@ -50,9 +44,7 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
             logger.warn(`[/player] - data missing`);
             logger.debug(`[/player] - teamId: ${teamId}`);
             return res.status(400).json({
-                data: {
-                    error: "Invalid data"
-                }
+                error: "Invalid data"
             });
         }
         const team = await prisma.cricketTeam.findFirst({
@@ -64,9 +56,7 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
             logger.warn(`[/player] - team not found`);
             logger.debug(`[/player] - teamId: ${teamId}`);
             return res.status(400).json({
-                data: {
-                    error: "Invalid team"
-                }
+                error: "Invalid team"
             });
         }
 
@@ -75,13 +65,11 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
                 userId: req.user.userId
             }
         });
-        
+
         if (playerExists) {
             logger.warn(`[/player] - player already exists`);
             return res.status(400).json({
-                data: {
-                    error: "Player already exists"
-                }
+                error: "Player already exists"
             });
         }
 
@@ -96,14 +84,12 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
         });
         await mailer.sendAppliedMail(req.user.email, team.name);
         logger.info(`[/player] - player added`);
-        return res.status(200).json({ data: { player } });
+        return res.status(200).json({ player });
     }
     catch (error: any) {
         logger.error(`[/player] - ${error.message}`);
         return res.status(500).json({
-            data: {
-                error: error.message
-            }
+            error: error.message
         });
     }
 }

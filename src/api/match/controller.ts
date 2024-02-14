@@ -9,9 +9,7 @@ const getMatches = async (req: Request, res: Response) => {
             logger.warn(`[/matches] - data missing`);
             logger.debug(`[/matches] - year: ${year}`);
             return res.status(400).json({
-                data: {
-                    error: "Invalid year"
-                }
+                error: "Invalid year"
             });
         }
 
@@ -34,16 +32,12 @@ const getMatches = async (req: Request, res: Response) => {
         logger.info(`[/matches] - ${matches.length} matches found`);
 
         return res.status(200).json({
-            data: {
-                matches
-            }
+            matches
         });
     } catch (error: any) {
         logger.error(`[/matches] - ${error.message}`);
         return res.status(500).json({
-            data: {
-                error: error.message
-            }
+            error: error.message
         });
     }
 }
@@ -55,9 +49,7 @@ const addMatch = async (req: Request, res: Response) => {
             logger.warn(`[/matches] - data missing`);
             logger.debug(`[/matches] - year: ${year}, date: ${date}, team1Id: ${team1Id}, team2Id: ${team2Id}, venue: ${venue}`);
             return res.status(400).json({
-                data: {
-                    error: "Invalid data"
-                }
+                error: "Invalid data"
             });
         }
 
@@ -84,16 +76,12 @@ const addMatch = async (req: Request, res: Response) => {
         logger.info(`[/matches] - match schedule added, schedule: ${shcedule.sis_id}`);
 
         return res.status(200).json({
-            data: {
                 match
-            }
         });
     } catch (error: any) {
         logger.error(`[/matches] - ${error.message}`);
         return res.status(500).json({
-            data: {
-                error: error.message
-            }
+            error: error.message
         });
     }
 }
@@ -104,12 +92,10 @@ interface CustomRequest extends Request {
 
 const startMatch = async (req: CustomRequest, res: Response) => {
     try {
-        if(req.match.played) {
+        if (req.match.played) {
             logger.warn(`[/matches] - match already started`);
             return res.status(400).json({
-                data: {
-                    error: "Match already started"
-                }
+                error: "Match already started"
             });
         }
 
@@ -125,28 +111,22 @@ const startMatch = async (req: CustomRequest, res: Response) => {
         logger.info(`[/matches] - match started, match: ${match.sis_id}`);
 
         return res.status(200).json({
-            data: {
                 match
-            }
         });
     } catch (error: any) {
         logger.error(`[/matches] - ${error.message}`);
         return res.status(500).json({
-            data: {
-                error: error.message
-            }
+            error: error.message
         });
     }
 }
 
 const updateMatchToss = async (req: CustomRequest, res: Response) => {
     try {
-        if(req.match.tossWonBy) {
+        if (req.match.tossWonBy) {
             logger.warn(`[/matches] - match toss already updated`);
             return res.status(400).json({
-                data: {
-                    error: "Match toss already updated"
-                }
+                error: "Match toss already updated"
             });
         }
         const { tossWonBy } = req.body;
@@ -165,16 +145,12 @@ const updateMatchToss = async (req: CustomRequest, res: Response) => {
         logger.info(`[/matches/updateMatchToss] - match toss updated, match: ${match.sis_id}`);
 
         return res.status(200).json({
-            data: {
-                match
-            }
+            match
         });
     } catch (error: any) {
         logger.error(`[/matches/updateMatchToss] - ${error.message}`);
         return res.status(500).json({
-            data: {
-                error: error.message
-            }
+            error: error.message
         });
     }
 }

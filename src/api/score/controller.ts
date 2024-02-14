@@ -24,18 +24,16 @@ const getScore = async (req: CustomRequest, res: Response) => {
         const teamBScoreBowling = await prisma.cricketMatchPlayerBowlingScore.findMany({
             where: { matchId: req.match.team2Id },
         })
-        
+
         res.status(200).json({
-            data: {
-                teamA: {
-                    batting: teamABatting,
-                    bowling: teamAScoreBowling
-                },
-                teamB: {
-                    batting: teamBBatting,
-                    bowling: teamBScoreBowling
-                }
+            teamA: {
+                batting: teamABatting,
+                bowling: teamAScoreBowling
             },
+            teamB: {
+                batting: teamBBatting,
+                bowling: teamBScoreBowling
+            }
         })
 
     } catch (err) {
@@ -47,9 +45,7 @@ const getScore = async (req: CustomRequest, res: Response) => {
 const updateScore = async (req: CustomRequest, res: Response) => {
     try {
         return res.json({
-            data:{
-                message: "In Progress..."
-            }
+            message: "In Progress..."
         })
     } catch (err) {
         logger.error(err)

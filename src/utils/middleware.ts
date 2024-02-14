@@ -10,13 +10,12 @@ interface AuthenticatedRequest extends Request {
 }
 const verifyJWT = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const token = req.cookies?.token || req.header("Authorization")?.split(" ")[1];
+    console.log(token);
     if (!token) {
         logger.warn(`[/middleware/verifyJWT] - token missing`);
         logger.debug(`[/middleware/verifyJWT] - token: ${token}`);
         return res.status(401).json({
-            data: {
                 error: 'No token provided.'
-            }
         });
     }
     try {
@@ -30,9 +29,7 @@ const verifyJWT = async (req: AuthenticatedRequest, res: Response, next: NextFun
         if (!user) {
             logger.warn(`[/middleware/verifyJWT] - user not found`);
             return res.status(401).json({
-                data: {
                     error: 'Invalid access token.'
-                }
             });
         }
         logger.info(`[/middleware/verifyJWT] - user: ${user?.userId} authenticated`);
@@ -52,9 +49,7 @@ const isSportsHead = async (req: AuthenticatedRequest, res: Response, next: Next
         if (req.user.role !== 'SPORTS_HEAD') {
             logger.warn(`[/middleware/isSportsHead] - unauthorized access by user: ${req.user.userId}`);
             return res.status(401).json({
-                data: {
                     error: 'Unauthorized access.'
-                }
             });
         }
         logger.info(`[/middleware/isSportsHead] - user: ${req.user.userId} authorized`);
@@ -74,9 +69,7 @@ const isUser = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
             logger.warn(`[/middleware/isUser] - data missing`);
             logger.debug(`[/middleware/isUser] - email: ${email}`);
             return res.status(400).json({
-                data: {
                     error: "Please provide all the required fields",
-                }
             });
         }
         let user: any;
@@ -85,9 +78,7 @@ const isUser = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
                 logger.warn(`[/middleware/isUser] - invalid email`);
                 logger.debug(`[/middleware/isUser] - email: ${email}`);
                 return res.status(400).json({
-                    data: {
                         error: "Please provide a valid email",
-                    }
                 });
             }
             user = await prisma.users.findFirst({
@@ -106,9 +97,7 @@ const isUser = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
             logger.warn(`[/middleware/isUser] - user not found`);
             logger.debug(`[/middleware/isUser] - email: ${email}`);
             return res.status(400).json({
-                data: {
                     error: "User not found",
-                }
             });
         }
         logger.info(`[/middleware/isUser] - user: ${user.userId} found`);
@@ -128,9 +117,7 @@ const isNotVerified = async (req: AuthenticatedRequest, res: Response, next: Nex
         if (req.user.isVerified) {
             logger.warn(`[/middleware/iseNotVerified] - user: ${req.user.userId} is already verified`);
             return res.status(400).json({
-                data: {
                     error: 'User is already verified.'
-                }
             });
         }
         logger.info(`[/middleware/iseNotVerified] - user: ${req.user.userId} is not verified`);
@@ -156,9 +143,7 @@ const mailSent = async (req: AuthenticatedRequest, res: Response, next: NextFunc
             const leftTime = new Date(Number(tokenData.expiration) - Date.now());
             return res.status(400).json({
                 leftTime,
-                data: {
                     error: `Verification mail already sent, you can resend it after ${leftTime.getMinutes() != 0 ? `${leftTime.getMinutes()}:${leftTime.getSeconds()} minutes` : `${leftTime.getSeconds()} seconds`}`,
-                }
             })
         }
         next();
@@ -186,14 +171,14 @@ const isValidMatch = async (req: AuthenticatedRequest, res: Response, next: Next
         if (!match) {
             logger.warn(`[/middleware/isValidMatch] - match not found`);
             logger.debug(`[/middleware/isValidMatch] - matchId: ${matchId}`);
-            return res.status(404).json({ data: { error: 'Match not found' } })
+            return res.status(404).json({ error: 'Match not found' })
         }
         req.match = match;
         next();
     } catch (error: any) {
         logger.error(`[/middleware/isValidMatch] - ${error.message}`);
         return res.status(500).json({
-            data: { error: `While checking if match: ${req.params.matchId} is valid` }
+            error: `While checking if match: ${req.params.matchId} is valid`
         });
     }
 }
@@ -203,18 +188,18 @@ const isMatchPlayed = async (req: AuthenticatedRequest, res: Response, next: Nex
         if (!req.match) {
             logger.warn(`[/middleware/isMatchPlayed] - match not found`);
             logger.debug(`[/middleware/isMatchPlayed] - matchId: ${req.match.matchId}`);
-            return res.status(404).json({ data: { error: 'Match not found' } })
+            return res.status(404).json({ error: 'Match not found' })
         }
         if (!req.match.played) {
             logger.warn(`[/middleware/isMatchPlayed] - match not played yet`);
             logger.debug(`[/middleware/isMatchPlayed] - matchId: ${req.match.matchId}`);
-            return res.status(400).json({ data: { error: 'Match not played' } })
+            return res.status(400).json({ error: 'Match not played' })
         }
         next();
     } catch (error: any) {
         logger.error(`[/middleware/isMatchPlayed] - ${error.message}`);
         return res.status(500).json({
-            data: { error: `While checking if match: ${req.match.matchId} is played` }
+            error: `While checking if match: ${req.match.matchId} is played`
         });
     }
 }

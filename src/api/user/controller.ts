@@ -13,7 +13,7 @@ const getUser = async (req: Request, res: Response) => {
                 cricketPlayer: true,
             }
         });
-        res.status(200).json(user);
+        res.status(200).json({ user });
     } catch (error) {
         logger.error(error);
         res.status(500).json({ message: 'Something went wrong' });
