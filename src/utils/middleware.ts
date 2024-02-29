@@ -10,6 +10,7 @@ interface AuthenticatedRequest extends Request {
 }
 const verifyJWT = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const token = req.cookies?.token || req.header("Authorization")?.split(" ")[1];
+    console.log(token)
     if (!token) {
         logger.warn(`[/middleware/verifyJWT] - token missing`);
         logger.debug(`[/middleware/verifyJWT] - token: ${token}`);
@@ -35,6 +36,7 @@ const verifyJWT = async (req: AuthenticatedRequest, res: Response, next: NextFun
         req.user = user;
         next();
     } catch (error: any) {
+        console.log(error)
         logger.error(`[/middleware/verifyJWT] - ${error.message}`);
         return res.status(500).json({
             error: 'Failed to authenticate token.'

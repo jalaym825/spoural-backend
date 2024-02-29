@@ -63,6 +63,39 @@ const getTeam = async (req: Request, res: Response) => {
     }
 }
 
+const getTeamByName = async (req: Request, res: Response) => {
+    try {
+        const { name } = req.params;
+        if (!name) {
+            logger.warn(`[/getTeamByName/:name] - data missing`);
+            logger.debug(`[/getTeamByName/:name] - name: ${name}`);
+            return res.status(400).json({
+                error: "Invalid name"
+            });
+        }
+        const team = await prisma.cricketTeam.findFirst({
+            where: {
+                name: name.toLowerCase(),
+                year: new Date(Date.now()).getFullYear().toString()
+            },
+        });
+        if (!team) {
+            logger.warn(`[/getTeamByName/:name] - team not found`);
+            logger.debug(`[/getTeamByName/:name] - name: ${name}`);
+            return res.status(404).json({
+                error: "Team not found"
+            });
+        }
+        logger.info(`[/getTeamByName/:name] - ${team.name} found`);
+        return res.status(200).json({ team });
+    } catch (error: any) {
+        logger.error(`[/team/:id] - ${error.message}`);
+        return res.status(500).json({
+            error: error.message
+        });
+    }
+}
+
 const getTeams = async (req: Request, res: Response) => {
     try {
         const { year } = req.params;
@@ -266,4 +299,4 @@ const getPlayers = async (req: Request, res: Response) => {
     }
 }
 
-export default { getTeams, addTeam, addPlayer, getTeam, getPlayers }
+export default { getTeams, addTeam, addPlayer, getTeam, getPlayers, getTeamByName }
