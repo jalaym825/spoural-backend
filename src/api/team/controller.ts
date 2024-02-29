@@ -172,35 +172,26 @@ interface AuthenticatedRequest extends Request {
 
 const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const { teamId, playerId, playerEmail } = req.body;
-        if (!teamId) {
+        const { teamId, playerEmail } = req.body;
+        if (!teamId || !playerEmail) {
             logger.warn(`[/team/player] - data missing`);
-            logger.debug(`[/team/player] - teamId: ${teamId}`);
+            logger.debug(`[/team/player] - teamId: ${teamId} playerEmail: ${playerEmail}`);
             return res.status(400).json({
                 error: "Invalid data"
             });
         }
-        let user: any;
-        if (playerEmail) {
-            if (isValidEmail(playerEmail) === false) {
-                logger.warn(`[/team/player] - invalid email`);
-                logger.debug(`[/team/player] - email: ${playerEmail}`);
-                return res.status(400).json({
-                    error: "Invalid email"
-                });
-            }
-            user = await prisma.users.findFirst({
-                where: {
-                    email: playerEmail
-                }
-            });
-        } else {
-            user = await prisma.users.findFirst({
-                where: {
-                    userId: playerId
-                }
+        if (isValidEmail(playerEmail) === false) {
+            logger.warn(`[/team/player] - invalid email`);
+            logger.debug(`[/team/player] - email: ${playerEmail}`);
+            return res.status(400).json({
+                error: "Invalid email"
             });
         }
+        let user = await prisma.users.findFirst({
+            where: {
+                email: playerEmail
+            }
+        });
         if (!user) {
             user = await prisma.users.create({
                 data: {
@@ -214,27 +205,29 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
                 email: playerEmail
             });
         }
-        let player: any;
-        if (!playerId) {
-            player = await prisma.cricketPlayer.create({
-                data: {
-                    userId: user.userId,
-                },
-                include: {
-                    user: true
-                }
-            })
-        }
-        else {
-            player = await prisma.cricketPlayer.findFirst({
-                where: {
-                    sis_id: playerId
-                },
-                include: {
-                    user: true
-                }
+        let player = await prisma.cricketPlayer.findFirst({
+            where: {
+                userId: playerEmail.split('@')[0]
+            },
+            include: {
+                user: true
+            }
+        })
+        if (player) {
+            logger.warn(`[/team/player] - player already exists`);
+            logger.debug(`[/team/player] - player: ${player.user.userId}`);
+            return res.status(400).json({
+                error: "Player have already applied for the team selection"
             });
         }
+        player = await prisma.cricketPlayer.create({
+            data: {
+                userId: user.userId,
+            },
+            include: {
+                user: true
+            }
+        })
 
         const team = await prisma.cricketTeam.update({
             where: {
