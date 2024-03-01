@@ -75,6 +75,7 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
 
         const player = await prisma.cricketPlayer.create({
             data: {
+                teamId,
                 userId: req.user.userId,
                 isWicketKeeper,
                 isAllRounder,

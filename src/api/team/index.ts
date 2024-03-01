@@ -1,6 +1,6 @@
 import controller from './controller';
 import { Router } from 'express';
-import { verifyJWT, isSportsHead } from './middleware';
+import { verifyJWT, isSportsHead } from '../../utils/middleware';
 const router = Router();
 
 router.get('/year/:year', controller.getTeams);
