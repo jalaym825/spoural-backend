@@ -72,7 +72,7 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
                 error: "Player already exists"
             });
         }
-
+        console.log(teamId)
         const player = await prisma.cricketPlayer.create({
             data: {
                 teamId,

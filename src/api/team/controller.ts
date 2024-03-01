@@ -222,6 +222,7 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
         }
         player = await prisma.cricketPlayer.create({
             data: {
+                teamId,
                 userId,
             },
             include: {
