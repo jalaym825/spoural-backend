@@ -172,7 +172,7 @@ interface AuthenticatedRequest extends Request {
 
 const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const { teamId, playerEmail } = req.body;
+        const { teamId, playerEmail, userId } = req.body;
         if (!teamId || !playerEmail) {
             logger.warn(`[/team/player] - data missing`);
             logger.debug(`[/team/player] - teamId: ${teamId} playerEmail: ${playerEmail}`);
@@ -195,7 +195,7 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
         if (!user) {
             user = await prisma.users.create({
                 data: {
-                    userId: playerEmail.split('@')[0],
+                    userId,
                     email: playerEmail,
                     name: generateName(), // Add the 'name' property with a default value
                     password: generatePassword(6) // Add the 'password' property with a default value
@@ -207,7 +207,7 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
         }
         let player = await prisma.cricketPlayer.findFirst({
             where: {
-                userId: playerEmail.split('@')[0]
+                userId
             },
             include: {
                 user: true
@@ -222,7 +222,7 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
         }
         player = await prisma.cricketPlayer.create({
             data: {
-                userId: user.userId,
+                userId,
             },
             include: {
                 user: true

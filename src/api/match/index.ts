@@ -7,5 +7,6 @@ router.get('/:year', controller.getMatches);
 router.post('/', verifyJWT, isSportsHead, controller.addMatch);
 router.put('/start/:matchId', verifyJWT, isSportsHead, isValidMatch, controller.startMatch);
 router.put('/toss/:matchId', verifyJWT, isSportsHead, isValidMatch, controller.updateMatchToss);
+// router.delete('/delete/:matchId', verifyJWT, isSportsHead, isValidMatch, controller.deleteMatch);
 // export default router;
 export default router;
