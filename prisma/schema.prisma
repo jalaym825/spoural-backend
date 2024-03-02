@@ -19,7 +19,7 @@ model Users {
   name               String?
   password           String?
   token              String?
-  role               Role                @default(USER)
+  roles              Role[]              @default([USER])
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
   rec_status         Boolean             @default(false)
@@ -50,13 +50,13 @@ model CricketTeam {
   // playerIds String[]
 
   players           CricketPlayer[] //   @relation("playerTeam", fields: [playerIds], references: [sis_id])
-  team2_matches     CricketMatch[]    @relation("team2")
-  team1_matches     CricketMatch[]    @relation("team1")
+  team2_matches     CricketMatch[]  @relation("team2")
+  team1_matches     CricketMatch[]  @relation("team1")
   // schedule_team1    CricketSchedule[] @relation("team1")
   // schedule_team2    CricketSchedule[] @relation("team2")
-  winning_team      CricketMatch[]    @relation("winningTeam")
-  toss_winning_team CricketMatch[]    @relation("tossWinningTeam")
-  player_team       CricketPlayer[]   @relation("playerTeam")
+  winning_team      CricketMatch[]  @relation("winningTeam")
+  toss_winning_team CricketMatch[]  @relation("tossWinningTeam")
+  player_team       CricketPlayer[] @relation("playerTeam")
   // @@unique([sis_id, year])
 }
 

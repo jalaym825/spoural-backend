@@ -45,7 +45,7 @@ const verifyJWT = async (req: AuthenticatedRequest, res: Response, next: NextFun
 const isSportsHead = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
         logger.debug(`[/middleware/isSportsHead] - user: ${req.user.userId}, role: ${req.user.role}`);
-        if (req.user.role !== 'SPORTS_HEAD') {
+        if (!req.user.roles.includes('SPORTS_HEAD')) {
             logger.warn(`[/middleware/isSportsHead] - unauthorized access by user: ${req.user.userId}`);
             return res.status(401).json({
                 error: 'Unauthorized access.'

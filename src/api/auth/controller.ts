@@ -109,7 +109,7 @@ const register = async (req: Request, res: Response) => {
                 email: email.toLowerCase(),
                 userId: userId.toLowerCase(),
                 password: hashedPassword,
-                role: "USER"
+                roles: ["USER"]
             },
         });
         logger.info(`[/auth/register] - success - ${newUser.userId}`);

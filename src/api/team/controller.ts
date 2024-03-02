@@ -43,7 +43,11 @@ const getTeam = async (req: Request, res: Response) => {
                 sis_id: id
             },
             include: {
-                players: true
+                players: {
+                    where: {
+                        isSelected: true
+                    }
+                }
             }
         });
         if (!team) {
@@ -245,11 +249,10 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
                 players: true
             }
         });
-        await mailer.sendAddedToTeamMail(playerEmail, team.name, user.rec_status);
+        await mailer.sendAppliedMail(playerEmail, team.name, user.rec_status);
         logger.info(`[/team/player] - ${player.user.userId} added`);
         return res.status(200).json({ team });
     } catch (error: any) {
-        // console.log(error);
         logger.error(`[/team/player] - ${error.message}`);
         return res.status(500).json({
             error: error.message
@@ -260,6 +263,8 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
 const getPlayers = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
+        const selectedPlayers = req.query.selectedPlayers === 'true';
+
         if (!id) {
             logger.warn(`[/team/:id/players] - data missing`);
             logger.debug(`[/team/:id/players] - id: ${id}`);
@@ -267,15 +272,31 @@ const getPlayers = async (req: Request, res: Response) => {
                 error: "Invalid id"
             });
         }
-        const team = await prisma.cricketTeam.findFirst({
+        let team;
+        const include: any = {
+            players: {
+                include: {
+                    user: true
+                },
+                orderBy: {
+                    isSelected: 'desc'
+                }
+            }
+        };
+
+        if (selectedPlayers) {
+            include.players.where = {
+                isSelected: true
+            };
+        }
+
+        team = await prisma.cricketTeam.findFirst({
             where: {
                 sis_id: id
             },
-            select: {
-                name: true,
-                players: true
-            }
+            include: include
         });
+
         if (!team) {
             logger.warn(`[/team/:id/players] - team not found`);
             logger.debug(`[/team/:id/players] - id: ${id}`);
@@ -286,6 +307,7 @@ const getPlayers = async (req: Request, res: Response) => {
         logger.info(`[/team/:id/players] - ${team.name} found`);
         return res.status(200).json({ players: team.players });
     } catch (error: any) {
+        console.log(error)
         logger.error(`[/team/:id/players] - ${error.message}`);
         return res.status(500).json({
             error: error.message
@@ -293,4 +315,159 @@ const getPlayers = async (req: Request, res: Response) => {
     }
 }
 
-export default { getTeams, addTeam, addPlayer, getTeam, getPlayers, getTeamByName }
+const selectPlayer = async (req: Request, res: Response) => {
+    try {
+        const { playerId } = req.params;
+        if (!playerId) {
+            logger.warn(`[/team/player/:id] - data missing`);
+            logger.debug(`[/team/player/:id] - playerId: ${playerId}`);
+            return res.status(400).json({
+                error: "Invalid data"
+            });
+        }
+        let player = await prisma.cricketPlayer.findFirst({
+            where:{
+                sis_id: playerId
+            }
+        })
+        if(!player){
+            logger.warn(`[/team/player/:id] - player not found`);
+            logger.debug(`[/team/player/:id] - playerId: ${playerId}`);
+            return res.status(404).json({
+                error: "Player not found"
+            });
+        }
+
+        if(player.isSelected)
+        {
+            logger.warn(`[/team/player/:id] - player already selected`);
+            logger.debug(`[/team/player/:id] - playerId: ${playerId}`);
+            return res.status(400).json({
+                error: "Player already selected"
+            });
+        }
+
+        player = await prisma.cricketPlayer.update({
+            where: {
+                sis_id: playerId
+            },
+            data: {
+                isSelected: true
+            },
+            include: {
+                user: true
+            }
+        });
+        logger.info(`[/team/player/:id] - ${player.sis_id} selected`);
+        return res.status(200).json({ player });
+    } catch (error: any) {
+        logger.error(`[/team/player/:id] - ${error.message}`);
+        return res.status(500).json({
+            error: error.message
+        });
+    }
+}
+
+const removePlayer = async (req: Request, res: Response) => {
+    try {
+        const { playerId } = req.params;
+        if (!playerId) {
+            logger.warn(`[/team/player/:id] - data missing`);
+            logger.debug(`[/team/player/:id] - playerId: ${playerId}`);
+            return res.status(400).json({
+                error: "Invalid data"
+            });
+        }
+        let player = await prisma.cricketPlayer.findFirst({
+            where:{
+                sis_id: playerId
+            }
+        })
+        if(!player){
+            logger.warn(`[/team/player/:id] - player not found`);
+            logger.debug(`[/team/player/:id] - playerId: ${playerId}`);
+            return res.status(404).json({
+                error: "Player not found"
+            });
+        }
+
+        if(!player.isSelected)
+        {
+            logger.warn(`[/team/player/:id] - player already selected`);
+            logger.debug(`[/team/player/:id] - playerId: ${playerId}`);
+            return res.status(400).json({
+                error: "Player isn't in team."
+            });
+        }
+
+        player = await prisma.cricketPlayer.update({
+            where: {
+                sis_id: playerId
+            },
+            data: {
+                isSelected: false
+            },
+            include: {
+                user: true
+            }
+        });
+        logger.info(`[/team/player/:id] - ${player.sis_id} got rejected`);
+        return res.status(200).json({ player });
+    } catch (error: any) {
+        logger.error(`[/team/player/:id] - ${error.message}`);
+        return res.status(500).json({
+            error: error.message
+        });
+    }
+}
+
+const sendSelectionMail = async (req: Request, res: Response) => {
+    try {
+        const { teamId } = req.params;
+        if (!teamId) {
+            logger.warn(`[/team/sendSelectionMail/:teamId] - data missing`);
+            logger.debug(`[/team/sendSelectionMail/:teamId] - teamId: ${teamId}`);
+            return res.status(400).json({
+                error: "Invalid data"
+            });
+        }
+        const team = await prisma.cricketTeam.findFirst({
+            where: {
+                sis_id: teamId
+            },
+            include: {
+                players: {
+                    include: {
+                        user: true
+                    }
+                }
+            }
+        });
+        if (!team) {
+            logger.warn(`[/team/sendSelectionMail/:teamId] - team not found`);
+            logger.debug(`[/team/sendSelectionMail/:teamId] - teamId: ${teamId}`);
+            return res.status(404).json({
+                error: "Team not found"
+            });
+        }
+        let selectedPlayers = team.players.filter((player: any) => player.isSelected);
+        if (selectedPlayers.length === 0) {
+            logger.warn(`[/team/sendSelectionMail/:teamId] - no players selected`);
+            logger.debug(`[/team/sendSelectionMail/:teamId] - teamId: ${teamId}`);
+            return res.status(400).json({
+                error: "No players selected"
+            });
+        }
+        let emails = selectedPlayers.map((player: any) => player.user.email);
+        await mailer.sendSelectionMail(emails, team.name);
+        logger.info(`[/team/sendSelectionMail/:teamId] - mail sent to ${emails.length} players`);
+        return res.status(200).json({ message: "Mail sent" });
+    } catch (error: any) {
+        logger.error(`[/team/sendSelectionMail/:teamId] - ${error.message}`);
+        return res.status(500).json({
+            error: error.message
+        });
+    }
+}
+
+export default { getTeams, addTeam, addPlayer, getTeam, getPlayers, getTeamByName, selectPlayer, removePlayer, sendSelectionMail }
