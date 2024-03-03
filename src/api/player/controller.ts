@@ -1,12 +1,6 @@
 import { Request, Response } from 'express';
 import logger from '../../utils/logger';
 import prisma from '../../utils/prisma';
-import mailer from '../../utils/mailer';
-
-interface AuthenticatedRequest extends Request {
-    user?: any
-    match?: any
-}
 
 const getPlayer = async (req: Request, res: Response) => {
     try {
