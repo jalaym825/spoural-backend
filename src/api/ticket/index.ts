@@ -5,6 +5,7 @@ const router = Router();
 
 router.get('/', verifyJWT, isSportsHead, controller.getTickets);
 router.get('/:ticketId', verifyJWT, isSportsHead, controller.getTicket);
-router.post('/', verifyJWT, controller.createTicket);
+router.post('/', controller.createTicket);
+router.post('/reply/:ticketId', verifyJWT, isSportsHead, controller.reply)
 
 export default router;
