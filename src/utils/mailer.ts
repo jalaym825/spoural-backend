@@ -25,7 +25,7 @@ class Mailer {
 
     public async sendMail(to: Array<string>, subject: string, body: body) {
         return await this.transporter.sendMail({
-            from: { name: "Jalay Movaliya", address: 'jalay217@gmail.com' }, // sender address
+            from: { name: "Spoural 2K24", address: 'jalay217@gmail.com' }, // sender address
             to: to, // list of receivers
             subject: subject, // Subject line
             ...body
@@ -64,6 +64,22 @@ class Mailer {
             logger.error(`[/team/player] - ${error.message}`);
         }
     }
+
+
+    public async sendverifyotp(email: string, otp: String) {
+        try {
+            const body = {
+                html: `<p>Recet password email.your otp is <strong>${otp}</strong>.`
+            }
+            await this.sendMail([email], 'verify Otp', body);
+
+        } catch (error) {
+            logger.error(`[/forgotpassword/resetpassword]-Something went wrong`);
+        }
+
+    }
+
+
 }
 
 export default new Mailer();

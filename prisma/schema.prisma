@@ -13,6 +13,12 @@ enum Role {
   DEPT_SPORTS_CC
 }
 
+model OTP {
+  otp       String      @unique
+  email     String   
+  createdAt DateTime @default(now())
+}
+
 model Users {
   userId             String              @id @unique
   email              String              @unique
