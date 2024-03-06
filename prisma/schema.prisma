@@ -28,11 +28,13 @@ model Users {
   roles              Role[]              @default([USER])
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
+  // department         String?
   rec_status         Boolean             @default(false)
   cricketPlayerId    String?
   cricketPlayer      CricketPlayer?      @relation("cricketPlayer", fields: [cricketPlayerId], references: [sis_id])
   cricket_players    CricketPlayer[]     @relation("playerUser")
   verification_token VerificationToken[] @relation("verificationToken")
+  user_tickets       Ticket[]            @relation("userTickets")
 }
 
 // model CricketSchedule {
@@ -97,14 +99,22 @@ model CricketMatch {
   sis_id        String       @id @default(uuid())
   // matchId          String           @unique
   played        Boolean      @default(false)
+  
   tossWonBy     String?
   tossWonByTeam CricketTeam? @relation("tossWinningTeam", fields: [tossWonBy], references: [sis_id])
+
   tossDecision  String?
   date          DateTime
   venue         String?
   year          String
   dependency    Boolean      @default(false)
   dependentOn   String?
+  team1Wickets  Int?         @default(0)
+  team2Wickets  Int?         @default(0)
+  team1Runs     Int?         @default(0)
+  team2Runs     Int?         @default(0)
+  team1Balls    Int?         @default(0)
+  team2Balls    Int?         @default(0)
 
   wonBy     String?
   wonByTeam CricketTeam? @relation("winningTeam", fields: [wonBy], references: [sis_id])
@@ -163,4 +173,18 @@ model CricketMatchPlayerBowlingScore {
   sixes   Int    @default(0)
 
   match CricketMatch @relation("playerBowlingScoreMatch", fields: [matchId], references: [sis_id])
+}
+
+model Ticket {
+  sis_id      String    @id @default(uuid())
+  userEmail   String
+  userName    String
+  userId      String?
+  user        Users?    @relation("userTickets", fields: [userId], references: [userId])
+  title       String
+  description String
+  visited     Boolean   @default(false)
+  status      String    @default("open")
+  createdAt   DateTime  @default(now())
+  closedAt    DateTime?
 }

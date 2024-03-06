@@ -22,13 +22,54 @@ const getMatches = async (req: Request, res: Response) => {
             },
             include: {
                 team1: true,
-                team2: true
+                team2: true,
+                wonByTeam: true
             }
         });
         logger.info(`[/matches] - ${matches.length} matches found`);
 
         return res.status(200).json({
             matches
+        });
+    } catch (error: any) {
+        logger.error(`[/matches] - ${error.message}`);
+        return res.status(500).json({
+            error: error.message
+        });
+    }
+}
+
+const getMatch = async (req: Request, res: Response) => {
+    try {
+        const { matchId } = req.params;
+        if (!matchId) {
+            logger.warn(`[/matches] - data missing`);
+            logger.debug(`[/matches] - matchId: ${matchId}`);
+            return res.status(400).json({
+                error: "Invalid match id"
+            });
+        }
+
+        const match = await prisma.cricketMatch.findFirst({
+            where: {
+                sis_id: matchId
+            },
+            include: {
+                team1: true,
+                team2: true,
+                wonByTeam: true
+            }
+        });
+        if(!match) {
+            logger.warn(`[/matches] - match not found`);
+            return res.status(404).json({
+                error: "Match not found"
+            });
+        }
+        logger.info(`[/matches] - match found, match: ${match?.sis_id}`);
+
+        return res.status(200).json({
+            match
         });
     } catch (error: any) {
         logger.error(`[/matches] - ${error.message}`);
@@ -154,4 +195,4 @@ const updateMatchToss = async (req: CustomRequest, res: Response) => {
     }
 }
 
-export default { getMatches, addMatch, startMatch, updateMatchToss }
+export default { getMatches, addMatch, startMatch, updateMatchToss, getMatch }

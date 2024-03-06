@@ -260,7 +260,7 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
     }
 }
 
-const getPlayers = async (req: Request, res: Response) => {
+const getPlayers = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const { id } = req.params;
         const selectedPlayers = req.query.selectedPlayers === 'true';
@@ -272,6 +272,17 @@ const getPlayers = async (req: Request, res: Response) => {
                 error: "Invalid id"
             });
         }
+
+        // if (selectedPlayers === false) {
+        //     if (!req.user.roles.includes("SPORTS_HEAD") || !req.user.roles.includes("DEPT_SPORTS_CC")) {
+        //         logger.warn(`[/team/:id/players] - unauthorized access`);
+        //         logger.debug(`[/team/:id/players] - id: ${id}`);
+        //         return res.status(401).json({
+        //             error: "Unauthorized access"
+        //         });
+        //     }
+        // }
+
         let team;
         const include: any = {
             players: {
@@ -304,6 +315,15 @@ const getPlayers = async (req: Request, res: Response) => {
                 error: "Team not found"
             });
         }
+
+        // if (!req.user.roles.includes("SPORTS_HEAD") && req.user.roles.includes("DEPT_SPORTS_CC") && req.user.department.toLowerCase() !== team.name.toLowerCase()) {
+        //     logger.warn(`[/team/:id/players] - unauthorized access`);
+        //     logger.debug(`[/team/:id/players] - id: ${id}`);
+        //     return res.status(401).json({
+        //         error: "Unauthorized access"
+        //     });
+        // }
+
         logger.info(`[/team/:id/players] - ${team.name} found`);
         return res.status(200).json({ players: team.players });
     } catch (error: any) {
@@ -326,11 +346,11 @@ const selectPlayer = async (req: Request, res: Response) => {
             });
         }
         let player = await prisma.cricketPlayer.findFirst({
-            where:{
+            where: {
                 sis_id: playerId
             }
         })
-        if(!player){
+        if (!player) {
             logger.warn(`[/team/player/:id] - player not found`);
             logger.debug(`[/team/player/:id] - playerId: ${playerId}`);
             return res.status(404).json({
@@ -338,8 +358,7 @@ const selectPlayer = async (req: Request, res: Response) => {
             });
         }
 
-        if(player.isSelected)
-        {
+        if (player.isSelected) {
             logger.warn(`[/team/player/:id] - player already selected`);
             logger.debug(`[/team/player/:id] - playerId: ${playerId}`);
             return res.status(400).json({
@@ -379,11 +398,11 @@ const removePlayer = async (req: Request, res: Response) => {
             });
         }
         let player = await prisma.cricketPlayer.findFirst({
-            where:{
+            where: {
                 sis_id: playerId
             }
         })
-        if(!player){
+        if (!player) {
             logger.warn(`[/team/player/:id] - player not found`);
             logger.debug(`[/team/player/:id] - playerId: ${playerId}`);
             return res.status(404).json({
@@ -391,8 +410,7 @@ const removePlayer = async (req: Request, res: Response) => {
             });
         }
 
-        if(!player.isSelected)
-        {
+        if (!player.isSelected) {
             logger.warn(`[/team/player/:id] - player already selected`);
             logger.debug(`[/team/player/:id] - playerId: ${playerId}`);
             return res.status(400).json({
