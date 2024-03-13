@@ -69,7 +69,7 @@ class Mailer {
     public async sendverifyotp(email: string, otp: String) {
         try {
             const body = {
-                html: `<p>Recet password email.your otp is <strong>${otp}</strong>.`
+                html: `<p>Resetpassword confirmation otp is :${otp}</p> `
             }
             await this.sendMail([email], 'verify Otp', body);
 
