@@ -4,7 +4,6 @@ import { isValidEmail } from "../../utils/heplers";
 import prisma from "../../utils/prisma";
 import mailer from "../../utils/mailer";
 import otpGenerator from 'otp-generator'
-import { zalgo } from "colors";
 import bcrypt from 'bcrypt';
 
 const resetPassword = async (req: Request, res: Response) => {
@@ -32,9 +31,6 @@ const resetPassword = async (req: Request, res: Response) => {
             },
         });
 
-
-        console.log(userExist)
-
         if (!userExist) {
             logger.warn(`[/forgotpassword/resetpassword] - user is not found`);
             logger.debug(`[/forgotpassword/resetpassword] - email:${email}`);
@@ -49,14 +45,9 @@ const resetPassword = async (req: Request, res: Response) => {
                 lowerCaseAlphabets: false,
                 specialChars: false,
             });
-        console.log("otp->", otp)
-
-        const otppayload = await prisma.OTP.create({ data: { email, otp } });
 
         let Existotp = await prisma.OTP.findFirst({ where: { otp: otp } });
-
-        await mailer.sendverifyotp(email, otp);
-
+        
         while (Existotp) {
             otp = otpGenerator.generate(4, {
                 upperCaseAlphabets: false,
@@ -66,16 +57,15 @@ const resetPassword = async (req: Request, res: Response) => {
             Existotp = await prisma.OTP.findFirst({ where: { otp: otp } });
         }
 
-        console.log("otppayload", otppayload);
-
+        await mailer.sendverifyotp(email, otp);
+        const otppayload = await prisma.OTP.create({ data: { email, otp } });
 
         logger.info(`[/forgotpassword/resetpassword - success]`)
         logger.debug(`[/forgotpassword/resetpassword - email:${email} , otp:${otp}]`);
 
-        return res.status(200).json({
-            message: "Otp sent successfully",
+        res.status(200).json({
+            message: "OTP sent successfully",
         })
-
 
     } catch (err: any) {
         logger.warn([`/forgotpassword/resetpassword- ${err.message}`]);
@@ -89,7 +79,6 @@ const resetPassword = async (req: Request, res: Response) => {
 const verify = async (req: Request, res: Response) => {
     try {
         const { otp } = req.body;
-        console.log(otp)
 
         if (!otp) {
             logger.warn(`/forgotpassword/verify - data missing`)
@@ -114,7 +103,7 @@ const verify = async (req: Request, res: Response) => {
             });
         }
 
-        return res.status(200).json({
+        res.status(200).json({
             message: "OTP verified successfully"
         });
 
@@ -157,7 +146,7 @@ const changePassword = async (req: Request, res: Response) => {
             }
         })
 
-        return res.status(200).json({
+        res.status(200).json({
             success: true,
             message: "Password Change Successfully!"
         })
