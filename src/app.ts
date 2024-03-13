@@ -1,6 +1,4 @@
 require('events').EventEmitter.defaultMaxListeners = 15; // or a value appropriate for your application
-
-
 import { PrismaClient } from '@prisma/client';
 import express, {Request, Response} from 'express';
 import http from 'http';
@@ -25,7 +23,23 @@ app.use(helmet());
 app.use(cookieParser());
 
 
-const io = new Server(server);
+const io = new Server(server, {
+    cors:{
+        origin: "http://localhost:3001",
+        methods: ["GET", "POST"]
+    }
+});
+
+io.on("connection", (socket) => {
+    console.log(`user connected socketId: ${socket.id}`);
+    socket.on("sendNumber", data => {
+        console.log(data)
+        socket.broadcast.emit("receiveNumber", data);
+    })
+    socket.on("disconnect", () => {
+        console.log("user disconnected");
+    });
+})
 
 const port = process.env.PORT || 3000;
 
