@@ -19,7 +19,7 @@ const verifyJWT = async (req: AuthenticatedRequest, res: Response, next: NextFun
     }
     try {
         const payload = await jwt.verify(token.toString(), process.env.JWT_SECRET!) as JwtPayload;
-        const user = await prisma.users.findFirst({
+        const user = await prisma.users.findUnique({
             where: {
                 userId: payload.userId
             }
@@ -80,13 +80,13 @@ const isUser = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
                     error: "Please provide a valid email",
                 });
             }
-            user = await prisma.users.findFirst({
+            user = await prisma.users.findUnique({
                 where: {
                     email: email.toLowerCase(),
                 },
             });
         } else {
-            user = await prisma.users.findFirst({
+            user = await prisma.users.findUnique({
                 where: {
                     userId: userId,
                 },
@@ -131,7 +131,7 @@ const isNotVerified = async (req: AuthenticatedRequest, res: Response, next: Nex
 
 const mailSent = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
-        let tokenData = await prisma.verificationToken.findFirst({
+        let tokenData = await prisma.verificationToken.findUnique({
             where: {
                 sis_id: req.user.userId,
             },
@@ -157,7 +157,7 @@ const mailSent = async (req: AuthenticatedRequest, res: Response, next: NextFunc
 const isValidMatch = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     try {
         const { matchId } = req.params;
-        const match = await prisma.cricketMatch.findFirst({
+        const match = await prisma.cricketMatch.findUnique({
             where: { sis_id: matchId },
             select: {
                 team1: true,

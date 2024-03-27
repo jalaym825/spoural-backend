@@ -25,7 +25,7 @@ const resetPassword = async (req: Request, res: Response) => {
             })
         }
 
-        const userExist = await prisma.users.findFirst({
+        const userExist = await prisma.users.findUnique({
             where: {
                 email: email,
             },
@@ -46,7 +46,7 @@ const resetPassword = async (req: Request, res: Response) => {
                 specialChars: false,
             });
 
-        let Existotp = await prisma.OTP.findFirst({ where: { otp: otp } });
+        let Existotp = await prisma.OTP.findUnique({ where: { otp: otp } });
         
         while (Existotp) {
             otp = otpGenerator.generate(4, {
@@ -54,7 +54,7 @@ const resetPassword = async (req: Request, res: Response) => {
                 lowerCaseAlphabets: false,
                 specialChars: false,
             });
-            Existotp = await prisma.OTP.findFirst({ where: { otp: otp } });
+            Existotp = await prisma.OTP.findUnique({ where: { otp: otp } });
         }
 
         await mailer.sendverifyotp(email, otp);
@@ -89,7 +89,7 @@ const verify = async (req: Request, res: Response) => {
         }
 
         let otpValue = otp;
-        const existingOTP = await prisma.OTP.findFirst({
+        const existingOTP = await prisma.OTP.findUnique({
             where: {
                 otp: otpValue
             }

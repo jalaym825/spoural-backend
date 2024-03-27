@@ -4,7 +4,7 @@ import prisma from '../../utils/prisma';
 
 const getUser = async (req: Request, res: Response) => {
     try {
-        const user = await prisma.users.findFirst({
+        const user = await prisma.users.findUnique({
             where: {
                 userId: req.params.userId
             },

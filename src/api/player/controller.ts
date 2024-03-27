@@ -13,7 +13,7 @@ const getPlayer = async (req: Request, res: Response) => {
             });
         }
 
-        const player = await prisma.cricketPlayer.findFirst({
+        const player = await prisma.cricketPlayer.findUnique({
             where: {
                 sis_id: id
             },

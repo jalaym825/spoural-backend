@@ -76,7 +76,7 @@ const register = async (req: Request, res: Response) => {
                 error: "Please provide a valid email",
             });
         }
-        const user = await prisma.users.findFirst({
+        const user = await prisma.users.findUnique({
             where: {
                 email: email.toLowerCase(),
             },
@@ -88,7 +88,7 @@ const register = async (req: Request, res: Response) => {
                 error: "Email already exists",
             });
         }
-        const user2 = await prisma.users.findFirst({
+        const user2 = await prisma.users.findUnique({
             where: {
                 userId: userId.toLowerCase(),
             },
@@ -147,7 +147,7 @@ const login = async (req: Request, res: Response) => {
         }
         let user: any;
         if (!isValidEmail(emailOrUserId)) {
-            user = await prisma.users.findFirst({
+            user = await prisma.users.findUnique({
                 where: {
                     userId: emailOrUserId.toLowerCase(),
                 },
@@ -161,7 +161,7 @@ const login = async (req: Request, res: Response) => {
             }
         }
 
-        user = await prisma.users.findFirst({
+        user = await prisma.users.findUnique({
             where: {
                 email: emailOrUserId.toLowerCase(),
             },
@@ -218,7 +218,7 @@ const login = async (req: Request, res: Response) => {
 const sendVerificationMail = async (req: AuthenticatedRequest, res: Response) => {
     try {
         const secretToken = crypto.randomBytes(32).toString("hex");
-        let tokenData = await prisma.verificationToken.findFirst({
+        let tokenData = await prisma.verificationToken.findUnique({
             where: {
                 sis_id: req.user.userId,
             },
@@ -330,7 +330,7 @@ const verify = async (req: Request, res: Response) => {
                 error: "Please provide all the required fields",
             });
         }
-        const tokenData = await prisma.verificationToken.findFirst({
+        const tokenData = await prisma.verificationToken.findUnique({
             where: {
                 token
             }
@@ -355,7 +355,7 @@ const verify = async (req: Request, res: Response) => {
             });
         }
 
-        const user = await prisma.users.findFirst({
+        const user = await prisma.users.findUnique({
             where: {
                 userId: tokenData.sis_id
             }
@@ -411,7 +411,7 @@ const verify = async (req: Request, res: Response) => {
 
 //         const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET!) as JwtPayload;
 
-//         const user = await prisma.users.findFirst({
+//         const user = await prisma.users.findUnique({
 //             where: {
 //                 userId: decoded.userId
 //             }

@@ -14,8 +14,8 @@ enum Role {
 }
 
 model OTP {
-  otp       String      @unique
-  email     String   
+  otp       String   @unique
+  email     String
   createdAt DateTime @default(now())
 }
 
@@ -80,6 +80,7 @@ model CricketPlayer {
   isAllRounder      Boolean @default(false)
   isBatsman         Boolean @default(false)
   isBowler          Boolean @default(false)
+  runs              Int     @default(0)
   noOfMatchesPlayed Int     @default(0)
   noOfSixes         Int     @default(0)
   noOfFours         Int     @default(0)
@@ -87,34 +88,48 @@ model CricketPlayer {
   noOfRunsScored    Int     @default(0)
   noOfHalfCenturies Int     @default(0)
   noOfCenturies     Int     @default(0)
+  noOfWickets       Int     @default(0)
 
   matches              CricketMatch[] @relation("playerMatches")
   team                 CricketTeam?   @relation("playerTeam", fields: [teamId], references: [sis_id])
   user_cricket_players Users[]        @relation("cricketPlayer")
   overs                CricketOver[]  @relation("bowler")
   team_players         CricketTeam[] //@relation("playerTeam")
+  over_striker         CricketOver[]  @relation("striker")
+  over_non_striker     CricketOver[]  @relation("nonStriker")
 }
 
 model CricketMatch {
-  sis_id        String       @id @default(uuid())
+  sis_id String  @id @default(uuid())
   // matchId          String           @unique
-  played        Boolean      @default(false)
-  
+  played Boolean @default(false)
+
   tossWonBy     String?
   tossWonByTeam CricketTeam? @relation("tossWinningTeam", fields: [tossWonBy], references: [sis_id])
-
   tossDecision  String?
-  date          DateTime
-  venue         String?
-  year          String
-  dependency    Boolean      @default(false)
-  dependentOn   String?
-  team1Wickets  Int?         @default(0)
-  team2Wickets  Int?         @default(0)
-  team1Runs     Int?         @default(0)
-  team2Runs     Int?         @default(0)
-  team1Balls    Int?         @default(0)
-  team2Balls    Int?         @default(0)
+
+  date  DateTime
+  venue String?
+  year  String
+
+  dependency  Boolean @default(false)
+  dependentOn String?
+
+  team1Wickets Int? @default(0)
+  team2Wickets Int? @default(0)
+
+  team1Runs Int? @default(0)
+  team2Runs Int? @default(0)
+
+  team1Balls Int? @default(0)
+  team2Balls Int? @default(0)
+
+  overs          Int? @default(0)
+  powerPlayOvers Int? @default(0)
+  overPerBowler  Int? @default(0)
+
+  currentOverSis_id String?
+  currentOver       CricketOver? @relation("currentOver", fields: [currentOverSis_id], references: [sis_id])
 
   wonBy     String?
   wonByTeam CricketTeam? @relation("winningTeam", fields: [wonBy], references: [sis_id])
@@ -131,25 +146,37 @@ model CricketMatch {
   team_bowling_score CricketMatchPlayerBowlingScore[] @relation("playerBowlingScoreMatch")
 }
 
-model VerificationToken {
-  sis_id     String   @id @default(uuid())
-  token      String   @unique
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  expiration DateTime
-  user       Users    @relation("verificationToken", fields: [sis_id], references: [userId])
-}
-
 model CricketOver {
   sis_id   String        @id @default(uuid())
   bowlerId String
   bowler   CricketPlayer @relation("bowler", fields: [bowlerId], references: [sis_id])
   matchId  String
   match    CricketMatch  @relation("match", fields: [matchId], references: [sis_id])
-  runs     Int           @default(0)
-  wickets  Int           @default(0)
-  balls    Int           @default(0)
-  isMaiden Boolean       @default(false)
+
+  runs    Int @default(0)
+  wickets Int @default(0)
+
+  balls      Int @default(0)
+  validBalls Int @default(0)
+
+  strikerId String
+  striker   CricketPlayer @relation("striker", fields: [strikerId], references: [sis_id])
+
+  nonStrikerId String
+  nonStriker   CricketPlayer @relation("nonStriker", fields: [nonStrikerId], references: [sis_id])
+
+  balls_played       CricketOverBall[] @relation("overBall")
+  match_current_over CricketMatch[]    @relation("currentOver")
+}
+
+model CricketOverBall {
+  sis_id   String      @id @default(uuid())
+  overId   String
+  over     CricketOver @relation("overBall", fields: [overId], references: [sis_id])
+  ballNo   Int
+  runs     Int
+  wicket   Boolean     @default(false)
+  ballType String      @default("normal")
 }
 
 model CricketMatchPlayerBattingScore {
@@ -173,6 +200,15 @@ model CricketMatchPlayerBowlingScore {
   sixes   Int    @default(0)
 
   match CricketMatch @relation("playerBowlingScoreMatch", fields: [matchId], references: [sis_id])
+}
+
+model VerificationToken {
+  sis_id     String   @id @default(uuid())
+  token      String   @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  expiration DateTime
+  user       Users    @relation("verificationToken", fields: [sis_id], references: [userId])
 }
 
 model Ticket {

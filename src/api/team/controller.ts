@@ -38,7 +38,7 @@ const getTeam = async (req: Request, res: Response) => {
                 error: "Invalid id"
             });
         }
-        const team = await prisma.cricketTeam.findFirst({
+        const team = await prisma.cricketTeam.findUnique({
             where: {
                 sis_id: id
             },
@@ -191,7 +191,7 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
                 error: "Invalid email"
             });
         }
-        let user = await prisma.users.findFirst({
+        let user = await prisma.users.findUnique({
             where: {
                 email: playerEmail
             }
@@ -209,7 +209,7 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
                 email: playerEmail
             });
         }
-        let player = await prisma.cricketPlayer.findFirst({
+        let player = await prisma.cricketPlayer.findUnique({
             where: {
                 userId
             },
@@ -301,7 +301,7 @@ const getPlayers = async (req: AuthenticatedRequest, res: Response) => {
             };
         }
 
-        team = await prisma.cricketTeam.findFirst({
+        team = await prisma.cricketTeam.findUnique({
             where: {
                 sis_id: id
             },
@@ -345,7 +345,7 @@ const selectPlayer = async (req: Request, res: Response) => {
                 error: "Invalid data"
             });
         }
-        let player = await prisma.cricketPlayer.findFirst({
+        let player = await prisma.cricketPlayer.findUnique({
             where: {
                 sis_id: playerId
             }
@@ -397,7 +397,7 @@ const removePlayer = async (req: Request, res: Response) => {
                 error: "Invalid data"
             });
         }
-        let player = await prisma.cricketPlayer.findFirst({
+        let player = await prisma.cricketPlayer.findUnique({
             where: {
                 sis_id: playerId
             }
@@ -449,7 +449,7 @@ const sendSelectionMail = async (req: Request, res: Response) => {
                 error: "Invalid data"
             });
         }
-        const team = await prisma.cricketTeam.findFirst({
+        const team = await prisma.cricketTeam.findUnique({
             where: {
                 sis_id: teamId
             },
