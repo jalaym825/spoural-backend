@@ -5,6 +5,7 @@ import playerRouter from './api/player/index';
 import userRoutes from './api/user/index';
 import forgotpassword from './api/forgotpassword/index'
 import ticketRouter from './api/ticket/index';
+import testRouter from './api/test/index'
 
 function routes(app: any) {
     app.use('/auth', authRouter);
@@ -13,7 +14,8 @@ function routes(app: any) {
     app.use('/players', playerRouter);
     app.use('/users', userRoutes);
     app.use('/forgotpassword',forgotpassword);
-    app.use('/tickets', ticketRouter)
+    app.use('/tickets', ticketRouter);
+    app.use('/test', testRouter);
 }
 
 export default routes;

@@ -13,6 +13,14 @@ enum Role {
   DEPT_SPORTS_CC
 }
 
+enum BallType {
+  NORMAL
+  NO_BALL
+  WIDE
+  LEG_BYE
+  BYE
+}
+
 model OTP {
   otp       String   @unique
   email     String
@@ -52,51 +60,51 @@ model Users {
 
 model CricketTeam {
   sis_id String @id @default(uuid())
-  // teamId    String   @unique
   name   String
   year   String
-  // playerIds String[]
 
-  players           CricketPlayer[] //   @relation("playerTeam", fields: [playerIds], references: [sis_id])
-  team2_matches     CricketMatch[]  @relation("team2")
-  team1_matches     CricketMatch[]  @relation("team1")
-  // schedule_team1    CricketSchedule[] @relation("team1")
-  // schedule_team2    CricketSchedule[] @relation("team2")
-  winning_team      CricketMatch[]  @relation("winningTeam")
-  toss_winning_team CricketMatch[]  @relation("tossWinningTeam")
-  player_team       CricketPlayer[] @relation("playerTeam")
-  // @@unique([sis_id, year])
+  players                            CricketPlayer[]
+  winning_team                       CricketMatch[]                   @relation("winningTeam")
+  toss_winning_team                  CricketMatch[]                   @relation("tossWinningTeam")
+  player_team                        CricketPlayer[]                  @relation("playerTeam")
+  cricket_match_teamData             CricketTeamMatchData[]           @relation("CricketTeamMatchData")
+  cricket_match_player_batting_score CricketMatchPlayerBattingScore[] @relation("playerBattingScoreTeam")
+  cricket_match_player_bowling_score CricketMatchPlayerBowlingScore[] @relation("playerBowlingScoreTeam")
+  CricketMatchTeamA                  CricketMatch[]                   @relation("cricketMatchTeamA")
+  CricketMatchTeamB                  CricketMatch[]                   @relation("cricketMatchTeamB")
 }
 
 model CricketPlayer {
-  sis_id            String  @id @default(uuid())
+  sis_id String  @id @default(uuid())
   // playerId             String         @unique
-  userId            String  @unique
-  user              Users   @relation("playerUser", fields: [userId], references: [userId])
-  teamId            String?
-  isSelected        Boolean @default(false)
-  isCaptain         Boolean @default(false)
-  isWicketKeeper    Boolean @default(false)
-  isAllRounder      Boolean @default(false)
-  isBatsman         Boolean @default(false)
-  isBowler          Boolean @default(false)
-  runs              Int     @default(0)
-  noOfMatchesPlayed Int     @default(0)
-  noOfSixes         Int     @default(0)
-  noOfFours         Int     @default(0)
-  noOfWicketsTaken  Int     @default(0)
-  noOfRunsScored    Int     @default(0)
-  noOfHalfCenturies Int     @default(0)
-  noOfCenturies     Int     @default(0)
-  noOfWickets       Int     @default(0)
+  // name String
+  userId String  @unique
+  user   Users   @relation("playerUser", fields: [userId], references: [userId])
+  teamId String?
 
-  matches              CricketMatch[] @relation("playerMatches")
-  team                 CricketTeam?   @relation("playerTeam", fields: [teamId], references: [sis_id])
-  user_cricket_players Users[]        @relation("cricketPlayer")
-  overs                CricketOver[]  @relation("bowler")
+  isSelected Boolean @default(false)
+
+  isCaptain      Boolean @default(false)
+  isWicketKeeper Boolean @default(false)
+  isAllRounder   Boolean @default(false)
+  isBatsman      Boolean @default(false)
+  isBowler       Boolean @default(false)
+
+  runs              Int @default(0)
+  noOfMatchesPlayed Int @default(0)
+  noOfSixes         Int @default(0)
+  noOfFours         Int @default(0)
+  noOfWicketsTaken  Int @default(0)
+  noOfHalfCenturies Int @default(0)
+  noOfCenturies     Int @default(0)
+  noOfWickets       Int @default(0)
+
+  matches              CricketMatch[]                   @relation("playerMatches")
+  team                 CricketTeam?                     @relation("playerTeam", fields: [teamId], references: [sis_id])
+  user_cricket_players Users[]                          @relation("cricketPlayer")
   team_players         CricketTeam[] //@relation("playerTeam")
-  over_striker         CricketOver[]  @relation("striker")
-  over_non_striker     CricketOver[]  @relation("nonStriker")
+  batting_score_player CricketMatchPlayerBattingScore[] @relation("battingScorePlayer")
+  bowling_score_player CricketMatchPlayerBowlingScore[] @relation("bowlingScoreMatchPlayer")
 }
 
 model CricketMatch {
@@ -128,78 +136,146 @@ model CricketMatch {
   powerPlayOvers Int? @default(0)
   overPerBowler  Int? @default(0)
 
-  currentOverSis_id String?
-  currentOver       CricketOver? @relation("currentOver", fields: [currentOverSis_id], references: [sis_id])
+  currentOverId String?
+  currentOver   CricketOver? @relation("currentOver", fields: [currentOverId], references: [sis_id])
 
   wonBy     String?
   wonByTeam CricketTeam? @relation("winningTeam", fields: [wonBy], references: [sis_id])
 
-  team1Id String
-  team1   CricketTeam @relation("team1", fields: [team1Id], references: [sis_id])
-  team2Id String
-  team2   CricketTeam @relation("team2", fields: [team2Id], references: [sis_id])
+  teamAId String?
+  teamA   CricketTeam? @relation("cricketMatchTeamA", fields: [teamAId], references: [sis_id])
+  teamBId String?
+  teamB   CricketTeam? @relation("cricketMatchTeamB", fields: [teamBId], references: [sis_id])
+
+  teamAScoreId String?
+  teamAScore   CricketTeamMatchData? @relation("cricketMatchTeamA", fields: [teamAScoreId], references: [sis_id])
+  teamBScoreId String?
+  teamBScore   CricketTeamMatchData? @relation("cricketMatchTeamB", fields: [teamBScoreId], references: [sis_id])
+
+  battingTeamScoreId String?
+  battingTeam        CricketTeamMatchData? @relation("matchBttingTeam", fields: [battingTeamScoreId], references: [sis_id])
+  bowlingTeamScoreId String?
+  bowlingTeam        CricketTeamMatchData? @relation("matchBowlingTeam", fields: [bowlingTeamScoreId], references: [sis_id])
 
   players            CricketPlayer[]                  @relation("playerMatches")
-  // schedule_matches   CricketSchedule?                 @relation("scheduleMatches")
   over_match         CricketOver[]                    @relation("match")
   team_batting_score CricketMatchPlayerBattingScore[] @relation("playerBattingScoreMatch")
   team_bowling_score CricketMatchPlayerBowlingScore[] @relation("playerBowlingScoreMatch")
 }
 
+model CricketTeamMatchData {
+  sis_id  String  @id @default(uuid())
+  teamId  String?
+  matchId String?
+  name    String?
+
+  runs     Int @default(0)
+  wideRuns Int @default(0)
+  nbRuns   Int @default(0)
+  byeRuns  Int @default(0)
+  lbRuns   Int @default(0)
+  wickets  Int @default(0)
+  balls    Int @default(0)
+
+  batters CricketMatchPlayerBattingScore[] @relation("batters")
+  bowlers CricketMatchPlayerBowlingScore[] @relation("bowlers")
+
+  team              CricketTeam?   @relation("CricketTeamMatchData", fields: [teamId], references: [sis_id])
+  cricketMatchTeamA CricketMatch[] @relation("cricketMatchTeamA")
+  cricketMatchTeamB CricketMatch[] @relation("cricketMatchTeamB")
+  matchBttingTeam   CricketMatch[] @relation("matchBttingTeam")
+  matchBowlingTeam  CricketMatch[] @relation("matchBowlingTeam")
+
+  @@unique([teamId, matchId])
+}
+
 model CricketOver {
-  sis_id   String        @id @default(uuid())
-  bowlerId String
-  bowler   CricketPlayer @relation("bowler", fields: [bowlerId], references: [sis_id])
-  matchId  String
-  match    CricketMatch  @relation("match", fields: [matchId], references: [sis_id])
+  sis_id String @id @default(uuid())
+
+  matchId String
+  match   CricketMatch @relation("match", fields: [matchId], references: [sis_id])
 
   runs    Int @default(0)
   wickets Int @default(0)
 
-  balls      Int @default(0)
+  totalBalls Int @default(0)
   validBalls Int @default(0)
 
-  strikerId String
-  striker   CricketPlayer @relation("striker", fields: [strikerId], references: [sis_id])
+  strikerScoreId String
+  strikerScore   CricketMatchPlayerBattingScore @relation("overStriker", fields: [strikerScoreId], references: [sis_id])
 
-  nonStrikerId String
-  nonStriker   CricketPlayer @relation("nonStriker", fields: [nonStrikerId], references: [sis_id])
+  nonStrikerScoreId String
+  nonStrikerScore   CricketMatchPlayerBattingScore @relation("overNonStriker", fields: [nonStrikerScoreId], references: [sis_id])
 
-  balls_played       CricketOverBall[] @relation("overBall")
+  bowlerScoreId String
+  bowlerScore   CricketMatchPlayerBowlingScore @relation("overBowler", fields: [bowlerScoreId], references: [sis_id])
+
+  balls              CricketOverBall[] @relation("overBall")
   match_current_over CricketMatch[]    @relation("currentOver")
 }
 
 model CricketOverBall {
-  sis_id   String      @id @default(uuid())
-  overId   String
-  over     CricketOver @relation("overBall", fields: [overId], references: [sis_id])
-  ballNo   Int
-  runs     Int
-  wicket   Boolean     @default(false)
-  ballType String      @default("normal")
+  sis_id       String      @id @default(uuid())
+  overId       String
+  over         CricketOver @relation("overBall", fields: [overId], references: [sis_id])
+  ballNo       Int
+  runs         Int
+  wicket       Boolean     @default(false)
+  ballType     BallType    @default(NORMAL)
+  extras       Int         @default(0)
+  wicketType   String?
+  deliveryType String? // Optional, for advanced ball analysis
 }
 
 model CricketMatchPlayerBattingScore {
-  sis_id     String @id
-  matchId    String
-  runs       Int    @default(0)
-  balls      Int    @default(0)
-  fours      Int    @default(0)
-  sixes      Int    @default(0)
-  strikeRate Float  @default(0)
+  sis_id     String  @id @default(uuid())
+  runs       Int     @default(0)
+  balls      Int     @default(0)
+  fours      Int     @default(0)
+  sixes      Int     @default(0)
+  strikeRate Float   @default(0)
+  out        Boolean @default(false)
+  played     Boolean @default(false)
+  wicketType String?
 
-  match CricketMatch @relation("playerBattingScoreMatch", fields: [matchId], references: [sis_id])
+  playerId String?
+  player   CricketPlayer? @relation("battingScorePlayer", fields: [playerId], references: [sis_id])
+
+  matchId String
+  match   CricketMatch @relation("playerBattingScoreMatch", fields: [matchId], references: [sis_id])
+
+  teamId String
+  team   CricketTeam @relation("playerBattingScoreTeam", fields: [teamId], references: [sis_id])
+
+  match_batters    CricketTeamMatchData[] @relation("batters")
+  over_striker     CricketOver[]          @relation("overStriker")
+  over_non_striker CricketOver[]          @relation("overNonStriker")
+
+  @@unique([matchId, playerId])
 }
 
 model CricketMatchPlayerBowlingScore {
-  sis_id  String @id
-  matchId String
-  runs    Int    @default(0)
-  balls   Int    @default(0)
-  fours   Int    @default(0)
-  sixes   Int    @default(0)
+  sis_id  String  @id @default(uuid())
+  runs    Int     @default(0)
+  balls   Int     @default(0)
+  fours   Int     @default(0)
+  sixes   Int     @default(0)
+  played  Boolean @default(false)
+  wickets Int     @default(0)
 
-  match CricketMatch @relation("playerBowlingScoreMatch", fields: [matchId], references: [sis_id])
+  playerId String?
+  player   CricketPlayer? @relation("bowlingScoreMatchPlayer", fields: [playerId], references: [sis_id])
+
+  matchId String
+  match   CricketMatch @relation("playerBowlingScoreMatch", fields: [matchId], references: [sis_id])
+
+  teamId String
+  team   CricketTeam @relation("playerBowlingScoreTeam", fields: [teamId], references: [sis_id])
+
+  match_bowlers CricketTeamMatchData[] @relation("bowlers")
+  over_bowler   CricketOver[]          @relation("overBowler")
+
+  @@unique([matchId, playerId])
 }
 
 model VerificationToken {

@@ -176,7 +176,7 @@ interface AuthenticatedRequest extends Request {
 
 const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const { teamId, playerEmail, userId } = req.body;
+        const { teamId, playerEmail, userId, playerCategory } = req.body;
         if (!teamId || !playerEmail) {
             logger.warn(`[/team/player] - data missing`);
             logger.debug(`[/team/player] - teamId: ${teamId} playerEmail: ${playerEmail}`);
@@ -224,10 +224,15 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
                 error: "Player have already applied for the team selection"
             });
         }
+
         player = await prisma.cricketPlayer.create({
             data: {
                 teamId,
                 userId,
+                isAllRounder: playerCategory === "ALL_ROUNDER",
+                isBatsman: playerCategory === "BATSMAN",
+                isBowler: playerCategory === "BOWLER",
+                isWicketKeeper: playerCategory === "BATSMAN_WK",
             },
             include: {
                 user: true
@@ -242,7 +247,7 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
                 players: {
                     connect: {
                         sis_id: player.sis_id
-                    }
+                    },
                 }
             },
             include: {
@@ -273,16 +278,6 @@ const getPlayers = async (req: AuthenticatedRequest, res: Response) => {
             });
         }
 
-        // if (selectedPlayers === false) {
-        //     if (!req.user.roles.includes("SPORTS_HEAD") || !req.user.roles.includes("DEPT_SPORTS_CC")) {
-        //         logger.warn(`[/team/:id/players] - unauthorized access`);
-        //         logger.debug(`[/team/:id/players] - id: ${id}`);
-        //         return res.status(401).json({
-        //             error: "Unauthorized access"
-        //         });
-        //     }
-        // }
-
         let team;
         const include: any = {
             players: {
@@ -301,7 +296,7 @@ const getPlayers = async (req: AuthenticatedRequest, res: Response) => {
             };
         }
 
-        team = await prisma.cricketTeam.findUnique({
+        team = await prisma.cricketTeam.findFirst({
             where: {
                 sis_id: id
             },
@@ -327,7 +322,6 @@ const getPlayers = async (req: AuthenticatedRequest, res: Response) => {
         logger.info(`[/team/:id/players] - ${team.name} found`);
         return res.status(200).json({ players: team.players });
     } catch (error: any) {
-        console.log(error)
         logger.error(`[/team/:id/players] - ${error.message}`);
         return res.status(500).json({
             error: error.message
@@ -488,4 +482,178 @@ const sendSelectionMail = async (req: Request, res: Response) => {
     }
 }
 
-export default { getTeams, addTeam, addPlayer, getTeam, getPlayers, getTeamByName, selectPlayer, removePlayer, sendSelectionMail }
+const getScoreCard = async (req: Request, res: Response) => {
+    try {
+        const { teamId, matchId } = req.params;
+        if (!teamId || !matchId) {
+            logger.warn(`[/team/battinscore/:teamId] - data missing`);
+            logger.debug(`[/team/battinscore/:teamId] - teamId: ${teamId} matchId: ${matchId}`);
+            return res.status(400).json({
+                error: "Invalid data"
+            });
+        }
+        const team = await prisma.cricketTeam.findUnique({
+            where: {
+                sis_id: teamId
+            }
+        });
+        if (!team) {
+            logger.warn(`[/team/battinscore/:teamId] - team not found`);
+            logger.debug(`[/team/battinscore/:teamId] - teamId: ${teamId}`);
+            return res.status(404).json({
+                error: "Team not found"
+            });
+        }
+        const scoreCard = await prisma.cricketTeamMatchData.findUnique({
+            where: {
+                teamId_matchId: {
+                    teamId, matchId
+                }
+            },
+            include: {
+                batters: {
+                    include: {
+                        player: {
+                            include: {
+                                user: true,
+                            },
+                        },
+                    },
+                    orderBy: {
+                        sis_id: 'asc'
+                    }
+                },
+                bowlers: {
+                    include: {
+                        player: {
+                            include: {
+                                user: true
+                            }
+                        }
+                    },
+                    orderBy: {
+                        sis_id: 'asc'
+                    }
+                }
+            },
+        });
+        logger.info(`[/team/battinscore/:teamId] - scorecard found for ${team.name} | ${team.sis_id}`);
+        return res.status(200).json({ scoreCard });
+    } catch (error: any) {
+        logger.error(`[/team/battinscore/:teamId] - ${error.message}`);
+        return res.status(500).json({
+            error: error.message
+        });
+    }
+}
+
+const getBattingScore = async (req: Request, res: Response) => {
+    try {
+        let { teamId, matchId, played = false } = req.params;
+        played = played === 'true';
+        if (!teamId || !matchId) {
+            logger.warn(`[/team/battinscore/:teamId] - data missing`);
+            logger.debug(`[/team/battinscore/:teamId] - teamId: ${teamId} matchId: ${matchId}`);
+            return res.status(400).json({
+                error: "Invalid data"
+            });
+        }
+        const team = await prisma.cricketTeam.findUnique({
+            where: {
+                sis_id: teamId
+            }
+        });
+        if (!team) {
+            logger.warn(`[/team/battinscore/:teamId] - team not found`);
+            logger.debug(`[/team/battinscore/:teamId] - teamId: ${teamId}`);
+            return res.status(404).json({
+                error: "Team not found"
+            });
+        }
+        const data: any = {};
+        if (played) {
+            data.played = played;
+        }
+
+        const batters = await prisma.cricketMatchPlayerBattingScore.findMany({
+            where: {
+                ...data,
+                teamId,
+                matchId
+            },
+            include: {
+                player: {
+                    include: {
+                        user: true,
+                    },
+                },
+            },
+            orderBy: {
+                sis_id: 'asc'
+            }
+        });
+        logger.info(`[/team/battinscore/:teamId] - scorecard found for ${team.name} | ${team.sis_id}`);
+        return res.status(200).json({ batters });
+    } catch (error: any) {
+        logger.error(`[/team/battinscore/:teamId] - ${error.message}`);
+        return res.status(500).json({
+            error: error.message
+        });
+    }
+}
+
+const getBowlingScore = async (req: Request, res: Response) => {
+    try {
+        let { teamId, matchId, played = false } = req.params;
+        played = played === "true"
+        if (!teamId || !matchId) {
+            logger.warn(`[/team/bowlersscore/:teamId] - data missing`);
+            logger.debug(`[/team/bowlersscore/:teamId] - teamId: ${teamId} matchId: ${matchId}`);
+            return res.status(400).json({
+                error: "Invalid data"
+            });
+        }
+        const team = await prisma.cricketTeam.findUnique({
+            where: {
+                sis_id: teamId
+            }
+        });
+        if (!team) {
+            logger.warn(`[/team/bowlersscore/:teamId] - team not found`);
+            logger.debug(`[/team/bowlersscore/:teamId] - teamId: ${teamId}`);
+            return res.status(404).json({
+                error: "Team not found"
+            });
+        }
+        const data: any = {};
+        if (played) {
+            data.played = played;
+        }
+        const bowlers = await prisma.cricketMatchPlayerBowlingScore.findMany({
+            where: {
+                ...data,
+                teamId,
+                matchId
+            },
+            include: {
+                player: {
+                    include: {
+                        user: true,
+                    },
+                },
+            },
+            orderBy: {
+                sis_id: 'asc'
+            }
+        });
+        logger.info(`[/team/bowlersscore/:teamId] - scorecard found for ${team.name} | ${team.sis_id}`);
+        return res.status(200).json({ bowlers });
+    } catch (error: any) {
+        logger.error(`[/team/bowlersscore/:teamId] - ${error.message}`);
+        return res.status(500).json({
+            error: error.message
+        });
+    }
+}
+
+export default { getTeams, addTeam, addPlayer, getTeam, getPlayers, getTeamByName, selectPlayer, removePlayer, sendSelectionMail, getScoreCard, getBattingScore, getBowlingScore }

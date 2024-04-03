@@ -26,11 +26,11 @@ const getScore = async (req: CustomRequest, res: Response) => {
         })
 
         res.status(200).json({
-            teamA: {
+            teamAScore: {
                 batting: teamABatting,
                 bowling: teamAScoreBowling
             },
-            teamB: {
+            teamBScore: {
                 batting: teamBBatting,
                 bowling: teamBScoreBowling
             }

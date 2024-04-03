@@ -159,12 +159,9 @@ const isValidMatch = async (req: AuthenticatedRequest, res: Response, next: Next
         const { matchId } = req.params;
         const match = await prisma.cricketMatch.findUnique({
             where: { sis_id: matchId },
-            select: {
-                team1: true,
-                team2: true,
-                sis_id: true,
-                tossWonBy: true
-                // played: true
+            include: {
+                teamAScore: true,
+                teamBScore: true,
             }
         })
         if (!match) {

@@ -27,5 +27,10 @@ router.put('/player/:playerId/remove', verifyJWT, isSportsHead, controller.remov
 // send selection mail to all selected players
 router.put('/sendSelectionMail/:teamId', verifyJWT, isSportsHead, controller.sendSelectionMail);
 
+router.get('/:teamId/scorecard/:matchId', controller.getScoreCard);
+
+router.get('/:teamId/battersscore/:matchId', controller.getBattingScore);
+router.get('/:teamId/bowlersscore/:matchId', controller.getBowlingScore);
+
 // export default router;
 export default router;

@@ -31,4 +31,47 @@ const getPlayer = async (req: Request, res: Response) => {
     }
 }
 
-export default { getPlayer }
+const getPlayerMatchBattingScore = async (req: Request, res: Response) => {
+    try {
+        const { matchId, playerId } = req.params;
+        if (!matchId) {
+            logger.warn(`[/player/matches/score] - data missing`);
+            logger.debug(`[/player/matches/score] - matchId: ${matchId}`);
+            return res.status(400).json({
+                error: "Invalid matchId"
+            });
+        }
+        if (!playerId) {
+            logger.warn(`[/player/matches/score] - data missing`);
+            logger.debug(`[/player/matches/score] - playerId: ${playerId}`);
+            return res.status(400).json({
+                error: "Invalid playerId"
+            });
+        }
+
+        const playerMatchBattingScore = await prisma.cricketMatchPlayerBattingScore.findUnique({
+            where: {
+                matchId_playerId: {
+                    matchId,
+                    playerId
+                }
+            },
+            include: {
+                player: { include: { user: true } }
+            }
+        });
+
+        logger.info(`[/player/matches/score] - player match score found`);
+
+        return res.status(200).json({
+            playerMatchBattingScore
+        });
+    } catch (error: any) {
+        logger.error(`[/player/matches/score] - ${error.message}`);
+        return res.status(500).json({
+            error: error.message
+        });
+    }
+}
+
+export default { getPlayer, getPlayerMatchBattingScore }

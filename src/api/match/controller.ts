@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import logger from '../../utils/logger';
 import prisma from '../../utils/prisma';
+import { CricketMatchPlayerBattingScore, CricketMatchPlayerBowlingScore } from '@prisma/client';
 
 const getMatches = async (req: Request, res: Response) => {
     try {
@@ -22,8 +23,16 @@ const getMatches = async (req: Request, res: Response) => {
                 date: 'desc'
             },
             include: {
-                team1: true,
-                team2: true,
+                teamAScore: {
+                    include: {
+                        team: true
+                    }
+                },
+                teamBScore: {
+                    include: {
+                        team: true
+                    }
+                },
                 wonByTeam: true
             }
         });
@@ -58,9 +67,63 @@ const getMatch = async (req: Request, res: Response) => {
                 sis_id: matchId
             },
             include: {
-                team1: true,
-                team2: true,
-                wonByTeam: true
+                battingTeam: {
+                    include: {
+                        team: true
+                    }
+                },
+                bowlingTeam: {
+                    include: {
+                        team: true
+                    }
+                },
+                teamAScore: {
+                    include: {
+                        team: true
+                    }
+                },
+                teamBScore: {
+                    include: {
+                        team: true
+                    }
+                },
+                wonByTeam: true,
+                currentOver: {
+                    include: {
+                        strikerScore: {
+                            include: {
+                                player: {
+                                    include: {
+                                        user: true
+                                    }
+                                }
+                            }
+                        },
+                        nonStrikerScore: {
+                            include: {
+                                player: {
+                                    include: {
+                                        user: true
+                                    }
+                                }
+                            }
+                        },
+                        bowlerScore: {
+                            include: {
+                                player: {
+                                    include: {
+                                        user: true
+                                    }
+                                }
+                            }
+                        },
+                        balls: {
+                            orderBy: {
+                                ballNo: 'asc'
+                            }
+                        }
+                    }
+                }
             }
         });
 
@@ -84,14 +147,21 @@ const getMatch = async (req: Request, res: Response) => {
     }
 };
 
+interface RequestBody {
+    date: Date;
+    teams: Array<any>; // Array type annotation
+    // or
+    // teams: any[]; // Shorthand syntax
+}
+
 const addMatch = async (req: Request, res: Response) => {
     try {
-        const { date, team1Id, team2Id } = req.body;
+        const { date, teams }: RequestBody = req.body;
 
         // Input validation
-        if (!date || !team1Id || !team2Id) {
+        if (!date || !teams.length || teams.length !== 2) {
             logger.warn(`[/matches] - Invalid or missing data in the request body`);
-            logger.debug(`[/matches] - date: ${date}, team1Id: ${team1Id}, team2Id: ${team2Id}`);
+            logger.debug(`[/matches] - date: ${date}, teams: ${teams}`);
             return res.status(400).json({
                 error: "Invalid data"
             });
@@ -101,12 +171,43 @@ const addMatch = async (req: Request, res: Response) => {
         const year = new Date(date).getFullYear().toString();
 
         // Create the match
-        const match = await prisma.cricketMatch.create({
+        let match = await prisma.cricketMatch.create({
             data: {
                 date,
-                team1Id,
-                team2Id,
                 year,
+                teamAId: teams[0].sis_id,
+                teamBId: teams[1].sis_id,
+                // Create the match first without connecting teams
+            }
+        });
+
+
+        const { sis_id: sis_id1 } = await prisma.cricketTeamMatchData.create({
+            data: {
+                teamId: teams[0].sis_id,
+                matchId: match.sis_id,
+                name: teams[0].name
+            }
+        })
+        const { sis_id: sis_id2 } = await prisma.cricketTeamMatchData.create({
+            data: {
+                teamId: teams[1].sis_id,
+                matchId: match.sis_id,
+                name: teams[1].name
+            }
+        })
+        teams[0].sis_id = sis_id1;
+        teams[1].sis_id = sis_id2;
+
+        match = await prisma.cricketMatch.update({
+            where: { sis_id: match.sis_id },
+            data: {
+                teamAScoreId: teams[0].sis_id,
+                teamBScoreId: teams[1].sis_id
+            },
+            include: {
+                teamAScore: true,
+                teamBScore: true,
             }
         });
 
@@ -129,56 +230,87 @@ interface CustomRequest extends Request {
 
 const startMatch = async (req: CustomRequest, res: Response) => {
     try {
-        // Check if the match has already started
-        if (req.match.played) {
-            logger.warn(`[/matches] - Match already started`);
-            return res.status(400).json({
-                error: "Match already started"
-            });
-        }
+        if (req.match.played) return res.status(400).json({ error: "Match already started" });
 
-        // Destructure necessary data from the request body
         const { overs, powerPlayOvers, overPerBowler, tossWonByTeamId, tossDecision, strikerId, nonStrikerId, bowlerId } = req.body;
+        const [strikerPlayer, nonStrikerPlayer, bowlerPlayer] = await Promise.all([
+            prisma.cricketPlayer.findUnique({ where: { sis_id: strikerId } }),
+            prisma.cricketPlayer.findUnique({ where: { sis_id: nonStrikerId } }),
+            prisma.cricketPlayer.findUnique({ where: { sis_id: bowlerId } })
+        ]);
 
-        // Create a new over for the match
+        if (![strikerPlayer, nonStrikerPlayer, bowlerPlayer].every(Boolean))
+            return res.status(400).json({ error: "Invalid player ID" });
+
+
+        const createBattingScoresForTeam = async (teamId: string) => {
+            const players = await prisma.cricketPlayer.findMany({ where: { teamId, isSelected: true } });
+            const battingScores = await Promise.all(players.map(async (player) => {
+                return prisma.cricketMatchPlayerBattingScore.create({ data: { matchId: req.match.sis_id, playerId: player.sis_id, teamId } });
+            }));
+            return battingScores;
+        };
+
+        const createBowlingScoresForTeam = async (teamId: string) => {
+            const players = await prisma.cricketPlayer.findMany({ where: { teamId, isSelected: true } });
+            const bowlingScores = await Promise.all(players.map(async (player) => {
+                return prisma.cricketMatchPlayerBowlingScore.create({ data: { matchId: req.match.sis_id, playerId: player.sis_id, teamId } });
+            }));
+            return bowlingScores;
+        };
+
+        const teamABattersScore = await createBattingScoresForTeam(req.match.teamAId);
+        const teamABowlersScore = await createBowlingScoresForTeam(req.match.teamAId);
+        const teamBBattersScore = await createBattingScoresForTeam(req.match.teamBId);
+        const teamBBowlersScore = await createBowlingScoresForTeam(req.match.teamBId);
+
+        const [strikerScore, nonStrikerScore, bowlerScore] = await Promise.all([
+            prisma.cricketMatchPlayerBattingScore.findUnique({ where: { matchId_playerId: { matchId: req.match.sis_id, playerId: strikerId } } }),
+            prisma.cricketMatchPlayerBattingScore.findUnique({ where: { matchId_playerId: { matchId: req.match.sis_id, playerId: nonStrikerId } } }),
+            prisma.cricketMatchPlayerBowlingScore.findUnique({ where: { matchId_playerId: { matchId: req.match.sis_id, playerId: bowlerId } } })
+        ]);
+
+        if (!strikerScore || !nonStrikerScore || !bowlerScore)
+            return res.status(400).json({ error: "Invalid player ID" });
+
         const over = await prisma.cricketOver.create({
-            data: {
-                matchId: req.match.sis_id,
-                bowlerId,
-                strikerId,
-                nonStrikerId,
-                balls: 0
-            }
+            data: { matchId: req.match.sis_id, bowlerScoreId: bowlerScore?.sis_id || "", strikerScoreId: strikerScore?.sis_id || "", nonStrikerScoreId: nonStrikerScore?.sis_id || "" }
         });
 
-        // Update match details to reflect the match has started
+        const battingTeamScoreId = strikerPlayer?.teamId === req.match.teamAScore.teamId ? req.match.teamAScore.sis_id : req.match.teamBScore.sis_id;
+        const bowlingTeamScoreId = bowlerPlayer?.teamId === req.match.teamAScore.teamId ? req.match.teamAScore.sis_id : req.match.teamBScore.sis_id;
+
         const match = await prisma.cricketMatch.update({
-            where: {
-                sis_id: req.match.sis_id
-            },
-            data: {
-                overs,
-                overPerBowler,
-                powerPlayOvers,
-                tossWonBy: tossWonByTeamId,
-                tossDecision,
-                currentOverSis_id: over.sis_id,
-                played: true
-            }
+            where: { sis_id: req.match.sis_id },
+            data: { overs, overPerBowler, powerPlayOvers, tossWonBy: tossWonByTeamId, tossDecision, currentOverId: over.sis_id, played: true, teamAScoreId: req.match.teamAScore.sis_id, teamBScoreId: req.match.teamBScore.sis_id, battingTeamScoreId, bowlingTeamScoreId },
+            include: { teamAScore: true, teamBScore: true }
         });
 
-        logger.info(`[/matches] - Match started, Match ID: ${match.sis_id}`);
+        if (!match.teamAScore?.teamId || !match.teamBScore?.teamId)
+            return res.status(400).json({ error: "Match teams not found" });
 
-        return res.status(200).json({
-            match
-        });
+        const connectPlayers = async (teamId: string, batters: Array<CricketMatchPlayerBattingScore>, bowlers: Array<CricketMatchPlayerBowlingScore>) => {
+            await prisma.cricketTeamMatchData.update({
+                where: { teamId_matchId: { teamId, matchId: match.sis_id } },
+                data: {
+                    batters: { connect: batters.map((player) => ({ sis_id: player.sis_id })) },
+                    bowlers: { connect: bowlers.map((player) => ({ sis_id: player.sis_id })) }
+                }
+            });
+        };
+
+        await Promise.all([
+            connectPlayers(match.teamAScore.teamId, teamABattersScore, teamABowlersScore),
+            connectPlayers(match.teamBScore.teamId, teamBBattersScore, teamBBowlersScore),
+        ]);
+
+        return res.status(200).json({ match });
     } catch (error: any) {
-        logger.error(`[/matches] - Error occurred: ${error.message}`);
-        return res.status(500).json({
-            error: "Internal server error"
-        });
+        console.log(error)
+        return res.status(500).json({ error: "Internal server error" });
     }
 };
+
 
 const updateMatchToss = async (req: CustomRequest, res: Response) => {
     try {
@@ -214,95 +346,116 @@ const updateMatchToss = async (req: CustomRequest, res: Response) => {
     }
 }
 
+// const invalidBallTypes = ["WIDE", "NO_BALL"];
+
 const updateRuns = async (req: CustomRequest, res: Response) => {
     try {
         const { matchId } = req.params;
-        const { runs, validBall, invalidBallType } = req.body;
+        const { runs, ballType, nextBowlerId } = req.body;
 
-        // Validate matchId
-        if (!matchId || typeof matchId !== 'string') {
-            logger.warn(`[/matches] - Invalid matchId: ${matchId}`);
-            return res.status(400).json({ error: "Invalid match ID" });
-        }
+        if (!matchId || typeof matchId !== 'string') return res.status(400).json({ error: "Invalid match ID" });
+        if (typeof runs !== 'number' || isNaN(runs) || runs < 0) return res.status(400).json({ error: "Invalid runs" });
 
-        // Validate runs
-        if (typeof runs !== 'number' || isNaN(runs) || runs < 0) {
-            logger.warn(`[/matches] - Invalid runs: ${runs}`);
-            return res.status(400).json({ error: "Invalid runs" });
-        }
-
-        // Fetch the match with the current over details
-        const match = await prisma.cricketMatch.findUnique({
+        let match = await prisma.cricketMatch.findUnique({
             where: { sis_id: matchId },
-            include: { currentOver: true }
+            include: { currentOver: { include: { strikerScore: { include: { player: true } } } }, teamAScore: true, teamBScore: true }
         });
 
-        // Validate match existence
-        if (!match) {
-            logger.warn(`[/matches] - Match not found for matchId: ${matchId}`);
-            return res.status(404).json({ error: "Match not found" });
-        }
+        if (!match) return res.status(404).json({ error: "Match not found" });
+        if (!match.played || !match.currentOver) return res.status(400).json({ error: "Match not started" });
+        if (!match.teamAScoreId || !match.teamBScoreId) return res.status(400).json({ error: "Match teams not found" });
 
-        // Validate if the match has started
-        if (!match.played || !match.currentOver) {
-            logger.warn(`[/matches] - Match not started or current over not available for matchId: ${matchId}`);
-            return res.status(400).json({ error: "Match not started" });
-        }
+        const battingTeam = match.teamAScore?.teamId === match.currentOver.strikerScore.teamId ? match.teamAScoreId : match.teamBScoreId;
 
-        // Determine batting team
-        const battingTeam = match.team1Id === match.currentOver.bowlerId ? match.team2Id : match.team1Id;
-
-        // Determine which team's runs and balls to update
+        // Prepare the update data
         const updateData = {
-            team1Runs: match.team1Runs ?? 0,
-            team2Runs: match.team2Runs ?? 0,
-            team1Balls: match.team1Balls ?? 0,
-            team2Balls: match.team2Balls ?? 0,
+            runs: { increment: runs },
+            balls: { increment: ["NO_BALL", "WIDE"].includes(ballType) ? 0 : 1 },
+            nbRuns: { increment: ballType === "NO_BALL" ? 1 : 0 },
+            lbRuns: { increment: ballType === "LEG_BYE" ? runs : 0 },
+            byeRuns: { increment: ballType === "BYE" ? runs : 0 },
+            wideRuns: { increment: ballType === "WIDE" ? runs : 0 }
         };
 
-        // Update runs and balls based on batting team
-        if (battingTeam === match.currentOver.strikerId) {
-            updateData.team1Runs += runs;
-            if (validBall) updateData.team1Balls += 1;
-        } else {
-            updateData.team2Runs += runs;
-            if (validBall) updateData.team2Balls += 1;
+        // Update the cricket team match data
+        await prisma.cricketTeamMatchData.update({
+            where: { sis_id: battingTeam },
+            data: updateData
+        });
+
+        let over = await prisma.cricketOver.findFirst({
+            where: { sis_id: match.currentOverId || "" },
+            include: { strikerScore: { include: { player: true } } }
+        });
+        console.log(over?.validBalls);
+
+        if (over?.validBalls === 6) {
+            const bowlerScore = await prisma.cricketMatchPlayerBowlingScore.findUnique({ where: { matchId_playerId: { matchId, playerId: nextBowlerId } } });
+            if (!bowlerScore) return res.status(400).json({ error: "Bowler not found" });
+            over = await prisma.cricketOver.create({
+                data: {
+                    matchId: match.sis_id,
+                    bowlerScoreId: bowlerScore.sis_id,
+                    strikerScoreId: over.nonStrikerScoreId,
+                    nonStrikerScoreId: over.strikerScoreId
+                },
+                include: { strikerScore: { include: { player: true } } }
+            });
+            match = await prisma.cricketMatch.update({ where: { sis_id: match.sis_id }, data: { currentOverId: over.sis_id }, include: { currentOver: { include: { strikerScore: { include: { player: true } } } }, teamAScore: true, teamBScore: true } });
         }
 
-        // Update match data
-        const updatedMatch = await prisma.cricketMatch.update({
-            where: { sis_id: match.sis_id },
-            data: updateData,
-            include: { currentOver: true }
-        });
-
-        // Update current over data
-        const updatedOver = await prisma.cricketOver.update({
-            where: { sis_id: match.currentOver.sis_id },
+        over = await prisma.cricketOver.update({
+            where: { sis_id: match.currentOver?.sis_id },
             data: {
-                balls: match.currentOver.balls + 1,
-                runs: match.currentOver.runs + runs,
-                validBalls: match.currentOver.validBalls + (validBall ? 1 : 0)
+                totalBalls: { increment: 1 },
+                runs: (match.currentOver?.runs || 0) + runs,
+                validBalls: { increment: ["NO_BALL", "WIDE"].includes(ballType) ? 0 : 1 }
             },
-            include: { striker: true }
+            include: { strikerScore: { include: { player: true } } }
         });
 
-        // Update striker player's runs
-        const updatedPlayer = await prisma.cricketPlayer.update({
-            where: { sis_id: updatedOver.striker.sis_id },
-            data: { runs: updatedOver.striker.runs + runs }
-        });
-
-        const ball = await prisma.cricketOverBall.create({
+        await prisma.cricketMatchPlayerBattingScore.update({
+            where: { matchId_playerId: { matchId: match.sis_id, playerId: over.strikerScore.playerId || "" } },
             data: {
-                overId: updatedOver.sis_id,
-                ballNo: updatedOver.validBalls + 1,
-                runs,
-                ballType: invalidBallType ? "normal" : invalidBallType
+                played: true,
+                balls: { increment: ballType !== "NO_BALL" ? 1 : 0 },
+                runs: { increment: ballType !== "NORMAL" ? (ballType === "NO_BALL" ? runs - 1 : 0) : runs },
+                sixes: { increment: runs === 6 ? 1 : 0 },
+                fours: { increment: runs === 4 ? 1 : 0 }
             }
         });
 
-        return res.status(200).json({ match: updatedMatch, over: updatedOver, striker: updatedPlayer, ball });
+        await prisma.cricketMatchPlayerBowlingScore.update({
+            where: { sis_id: over.bowlerScoreId },
+            data: {
+                played: true,
+                balls: { increment: ["WIDE", "NO_BALL"].includes(ballType) ? 0 : 1 },
+                runs: { increment: ["LEG_BYE", "BYE"].includes(ballType) ? 0 : runs }
+            }
+        })
+
+        const updatedPlayer = await prisma.cricketPlayer.update({
+            where: { sis_id: over.strikerScore.playerId || "" },
+            data: { runs: { increment: runs }, noOfSixes: { increment: runs === 6 ? 1 : 0 }, noOfFours: { increment: runs === 4 ? 1 : 0 } }
+        });
+
+        const ball = await prisma.cricketOverBall.create({
+            data: { overId: over.sis_id, ballNo: over.validBalls + 1, runs, ballType }
+        });
+
+        if (((runs === 1 || runs === 3) && ballType === "NORMAL") || ((runs === 2 || runs === 4) && ballType !== "NORMAL")) {
+            // Update the over in the database with swapped striker and non-striker
+            over = await prisma.cricketOver.update({
+                where: { sis_id: match.currentOver?.sis_id },
+                data: {
+                    strikerScoreId: over.nonStrikerScoreId,
+                    nonStrikerScoreId: over.strikerScoreId
+                },
+                include: { strikerScore: { include: { player: true } } }
+            });
+        }
+
+        return res.status(200).json({ match, over: over, striker: updatedPlayer, ball });
     } catch (error: any) {
         logger.error(`[/matches/updateMatchScore] - ${error.message}`);
         return res.status(500).json({ error: "Internal server error" });
@@ -312,83 +465,135 @@ const updateRuns = async (req: CustomRequest, res: Response) => {
 const updateWickets = async (req: CustomRequest, res: Response) => {
     try {
         const { matchId } = req.params;
-        const { wicketType, nextStriker } = req.body;
+        const { wicketType, upcomingBatsmanId, eliminatedPlayerId } = req.body;
 
-        // Validate matchId
-        if (!matchId || typeof matchId !== 'string') {
-            logger.warn(`[/matches] - Invalid matchId: ${matchId}`);
-            return res.status(400).json({ error: "Invalid match ID" });
-        }
+        if (!matchId || typeof matchId !== 'string') return res.status(400).json({ error: "Invalid match ID" });
+        if (!wicketType || typeof wicketType !== 'string') return res.status(400).json({ error: "Invalid wicket type" });
 
-        // Validate wicketType
-        if (!wicketType || typeof wicketType !== 'string') {
-            logger.warn(`[/matches] - Invalid wicketType: ${wicketType}`);
-            return res.status(400).json({ error: "Invalid wicket type" });
-        }
-
-        // Fetch the match with the current over details
         const match = await prisma.cricketMatch.findUnique({
             where: { sis_id: matchId },
-            include: { currentOver: true }
+            include: { currentOver: { include: { strikerScore: { include: { player: true } }, nonStrikerScore: { include: { player: true } }, bowlerScore: { include: { player: true } } } }, teamAScore: true, teamBScore: true }
         });
 
-        // Validate match existence
-        if (!match) {
-            logger.warn(`[/matches] - Match not found for matchId: ${matchId}`);
-            return res.status(404).json({ error: "Match not found" });
+        if (!match) return res.status(404).json({ error: "Match not found" });
+        if (!match.played || !match.currentOver) return res.status(400).json({ error: "Match not started" });
+        if (!match.teamAScoreId || !match.teamBScoreId) return res.status(400).json({ error: "Match teams not found" });
+
+        const battingTeam = match.teamAScore?.teamId === match.currentOver.strikerScore.teamId ? match.teamAScore.teamId : match.teamBScore?.teamId || "";
+
+        const cricketMatchTeamData = await prisma.cricketTeamMatchData.update({
+            where: { teamId_matchId: { teamId: battingTeam, matchId: match.sis_id } },
+            data: { wickets: { increment: 1 }, balls: { increment: 1 } }
+        });
+
+        const selectedTeamPlayers = await prisma.cricketPlayer.count({
+            where: {
+                teamId: battingTeam
+            },
+        })
+        if (cricketMatchTeamData.wickets === selectedTeamPlayers) {
+            return res.status(200).json({ message: "Match has been ended or all players has been eliminated from team, no more players can be eliminated" })
         }
 
-        // Validate if the match has started
-        if (!match.played || !match.currentOver) {
-            logger.warn(`[/matches] - Match not started or current over not available for matchId: ${matchId}`);
-            return res.status(400).json({ error: "Match not started" });
-        }
-
-        // Determine batting team
-        const battingTeam = match.team1Id === match.currentOver.bowlerId ? match.team2Id : match.team1Id;
-
-        // Determine which team's wickets to update
-        const updateData = {
-            team1Wickets: match.team1Wickets ?? 0,
-            team2Wickets: match.team2Wickets ?? 0,
+        const validatePlayer = async (playerId: string) => {
+            const player = await prisma.cricketPlayer.findUnique({ where: { sis_id: playerId } });
+            return player && player.teamId === battingTeam;
         };
 
-        // Update wickets based on batting team
-        if (battingTeam === match.currentOver.strikerId) {
-            updateData.team1Wickets += 1;
-        } else {
-            updateData.team2Wickets += 1;
-        }
+        if (!(await validatePlayer(upcomingBatsmanId))) return res.status(400).json({ error: "Invalid next striker player ID" });
+        if (!(await validatePlayer(eliminatedPlayerId))) return res.status(400).json({ error: "Invalid eliminated player ID" });
 
-        // Update match data
-        const updatedMatch = await prisma.cricketMatch.update({
-            where: { sis_id: match.sis_id },
-            data: updateData,
-            include: { currentOver: true }
+        await prisma.cricketMatchPlayerBattingScore.update({
+            where: { matchId_playerId: { matchId: match.sis_id, playerId: eliminatedPlayerId } },
+            data: { out: true, wicketType, played: true, balls: { increment: 1 } }
         });
 
-        // Update current over data
-        const updatedOver = await prisma.cricketOver.update({
+        await prisma.cricketMatchPlayerBowlingScore.update({
+            where: { matchId_playerId: { matchId: match.sis_id, playerId: match.currentOver.bowlerScore.playerId || "" } },
+            data: {
+                played: true,
+                wickets: { increment: 1 },
+                balls: { increment: 1 }
+            }
+        })
+
+        const upcomingBatsmanMatchScore = await prisma.cricketMatchPlayerBattingScore.findUnique({
+            where: { matchId_playerId: { matchId: match.sis_id, playerId: upcomingBatsmanId } }
+        });
+
+        if (!upcomingBatsmanMatchScore || upcomingBatsmanMatchScore.teamId !== battingTeam)
+            return res.status(400).json({ error: "Invalid upcoming batsman player ID" });
+
+        let updatedOver = await prisma.cricketOver.update({
             where: { sis_id: match.currentOver.sis_id },
             data: {
-                wickets: { increment: 1 }
+                wickets: { increment: 1 },
+                totalBalls: { increment: 1 },
+                validBalls: { increment: 1 },
+                strikerScoreId: eliminatedPlayerId === match.currentOver.strikerScore.playerId ? upcomingBatsmanMatchScore.sis_id : match.currentOver.strikerScoreId,
+                nonStrikerScoreId: eliminatedPlayerId === match.currentOver.nonStrikerScore.playerId ? upcomingBatsmanMatchScore.sis_id : match.currentOver.nonStrikerScoreId
             },
-            include: { striker: true }
+            include: { strikerScore: { include: { player: true } }, bowlerScore: { include: { player: true } } }
         });
 
-        // Update striker player's wickets
-        const updatedPlayer = await prisma.cricketPlayer.update({
-            where: { sis_id: updatedOver.bowlerId },
+        const updatedBowler = await prisma.cricketPlayer.update({
+            where: { sis_id: (updatedOver?.bowlerScore?.playerId || "") as string },
             data: { noOfWickets: { increment: 1 } }
         });
 
-        return res.status(200).json({ match: updatedMatch, over: updatedOver, striker: updatedPlayer });
 
-    }
-    catch (error: any) {
+        await prisma.cricketOverBall.create({
+            data: { overId: updatedOver.sis_id, ballNo: updatedOver.validBalls + 1, wicket: true, wicketType, runs: 0 }
+        });
+
+        if (updatedOver.validBalls === 6) {
+            updatedOver = await prisma.cricketOver.create({
+                data: {
+                    matchId: match.sis_id,
+                    bowlerScoreId: updatedOver.bowlerScoreId,
+                    strikerScoreId: updatedOver.nonStrikerScoreId,
+                    nonStrikerScoreId: updatedOver.strikerScoreId
+                },
+                include: { strikerScore: { include: { player: true } }, bowlerScore: { include: { player: true } } }
+            });
+            await prisma.cricketMatch.update({
+                where: { sis_id: match.sis_id },
+                data: { currentOverId: updatedOver.sis_id }
+            });
+        }
+
+        return res.status(200).json({ match, over: updatedOver, striker: updatedBowler });
+    } catch (error: any) {
         logger.error(`[/matches/updateMatchScore] - ${error.message}`);
         return res.status(500).json({ error: "Internal server error" });
     }
+};
+
+const getOver = async (req: Request, res: Response) => {
+    try {
+        const { overId } = req.params;
+
+        if (!overId || typeof overId !== 'string') {
+            logger.warn(`[/matches] - Invalid overId: ${overId}`);
+            return res.status(400).json({ error: "Invalid over ID" });
+        }
+
+        const over = await prisma.cricketOver.findUnique({
+            where: { sis_id: overId },
+            include: { strikerScore: { include: { player: true } }, nonStrikerScore: { include: { player: true } }, bowlerScore: { include: { player: true } }, balls: { orderBy: { ballNo: 'asc' } } },
+        });
+
+        if (!over) {
+            logger.warn(`[/matches] - Over not found for overId: ${overId}`);
+            return res.status(404).json({ error: "Over not found" });
+        }
+
+        return res.status(200).json({ over });
+    } catch (error: any) {
+        logger.error(`[/matches] - ${error.message}`);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+
 }
 
-export default { getMatches, addMatch, startMatch, updateMatchToss, getMatch, updateRuns, updateWickets }
+export default { getMatches, addMatch, startMatch, updateMatchToss, getMatch, updateRuns, updateWickets, getOver }
