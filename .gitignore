@@ -5,4 +5,4 @@ node_modules
 # swagger-output.json
 prisma/migrations
 prisma/generated
-dist
+# dist
