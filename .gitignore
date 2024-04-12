@@ -4,3 +4,4 @@ node_modules
 *.log
 swagger-output.json
 prisma/migrations
+prisma/generated
