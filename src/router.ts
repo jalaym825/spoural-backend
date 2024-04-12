@@ -7,6 +7,7 @@ import forgotpassword from './api/forgotpassword/index'
 import ticketRouter from './api/ticket/index';
 import testRouter from './api/test/index'
 import swaggerUi from 'swagger-ui-express';
+
 const swaggerDocument  = require('../swagger-output.json');
 
 function routes(app: any) {

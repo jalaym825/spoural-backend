@@ -6,7 +6,6 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import helmet from 'helmet';
 import routes from './router';
-import swaggerUi from 'swagger-ui-express';
 import cookieParser from 'cookie-parser';
 import 'colors';
 

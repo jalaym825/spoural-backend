@@ -5,12 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "swagger": "ts-node swagger.ts",
-    "start": "nodemon src/index.ts",
-    "build": "ts-node swagger.ts && npx prisma db push && npx prisma generate && rimraf dist && tsc",
-    "ts.check": "tsc --project tsconfig.json",
-    "add-build": "git add dist",
-    "vercel-build": "npx prisma db pull && prisma generate && rimraf dist && tsc",
-    "postinstall": "prisma generate"
+    "start": "nodemon src/app.ts"
   },
   "pre-commit": [
     "ts.check",
@@ -36,13 +31,13 @@
     "nodemon": "^3.0.2",
     "otp-generator": "^4.0.1",
     "pre-commit": "^1.2.2",
-    "prisma": "^5.12.1",
     "rimraf": "^5.0.5",
     "socket.io": "^4.7.3",
     "swagger-autogen": "^2.23.7",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
     "ts-node": "^10.9.2",
+    "prisma": "^5.9.1",
     "winston": "^3.11.0"
   },
   "devDependencies": {

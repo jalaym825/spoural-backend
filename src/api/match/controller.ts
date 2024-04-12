@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import logger from '../../utils/logger';
 import prisma from '../../utils/prisma';
-import { CricketMatchPlayerBattingScore, CricketMatchPlayerBowlingScore } from '../../../prisma/generated/client';
+import { CricketMatchPlayerBattingScore, CricketMatchPlayerBowlingScore } from '@prisma/client';
 
 const getMatches = async (req: Request, res: Response) => {
     try {
