@@ -9,7 +9,8 @@
     "start": "node dist/app.js",
     "dev": "nodemon src/app.ts",
     "postinstall": "prisma generate",
-    "vercel-build": "npx tsc"
+    "ts.check": "tsc --project tsconfig.json",
+    "add-build": "git add dist"
   },
   "pre-commit": [
     "ts.check",
