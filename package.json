@@ -6,7 +6,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "swagger": "ts-node swagger.ts",
     "start": "nodemon src/index.ts",
-    "build": "prisma generate && prisma migrate deploy && rimraf dist && tsc",
+    "build": "npx prisma db push && npx prisma generate && rimraf dist && tsc",
     "ts.check": "tsc --project tsconfig.json",
     "add-build": "git add dist",
     "vercel-build": "prisma generate && prisma migrate deploy",
