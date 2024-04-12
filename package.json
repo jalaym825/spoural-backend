@@ -19,7 +19,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@prisma/client": "^5.9.1",
+    "@prisma/client": "^5.12.1",
     "axios": "^1.6.5",
     "bcrypt": "^5.1.1",
     "colors": "^1.4.0",
