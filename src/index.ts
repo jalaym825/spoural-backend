@@ -1,5 +1,5 @@
 require('events').EventEmitter.defaultMaxListeners = 15; // or a value appropriate for your application
-import { PrismaClient } from '@prisma/client';
+import prisma from './utils/prisma';
 import express, {Request, Response} from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
@@ -12,7 +12,6 @@ import 'colors';
 
 const app = express();
 const server = http.createServer(app);
-const prisma = new PrismaClient();
 
 app.use(cors({
     origin: '*',

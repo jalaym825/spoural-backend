@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 require('events').EventEmitter.defaultMaxListeners = 15; // or a value appropriate for your application
-const client_1 = require("@prisma/client");
+const prisma_1 = __importDefault(require("./utils/prisma"));
 const express_1 = __importDefault(require("express"));
 const http_1 = __importDefault(require("http"));
 const socket_io_1 = require("socket.io");
@@ -15,7 +15,6 @@ const cookie_parser_1 = __importDefault(require("cookie-parser"));
 require("colors");
 const app = (0, express_1.default)();
 const server = http_1.default.createServer(app);
-const prisma = new client_1.PrismaClient();
 app.use((0, cors_1.default)({
     origin: '*',
 }));
@@ -41,7 +40,7 @@ io.on("connection", (socket) => {
 const port = process.env.PORT || 3000;
 server.listen(port, () => {
     console.log(`Listening on port ${port}`);
-    prisma.$connect().then(() => {
+    prisma_1.default.$connect().then(() => {
         console.log('Connected to database');
     });
     (0, router_1.default)(app);
