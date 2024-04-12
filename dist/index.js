@@ -50,4 +50,4 @@ app.get("/", (req, res) => {
     // res.json({ message: "Hello World" });
     res.json("OK");
 });
-//# sourceMappingURL=app.js.map
+//# sourceMappingURL=index.js.map
