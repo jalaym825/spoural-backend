@@ -13,6 +13,8 @@ router.put('/:matchId/toss', verifyJWT, isSportsHead, isValidMatch, controller.u
 
 router.put('/runs/:matchId', verifyJWT, isSportsHead, isValidMatch, controller.updateRuns);
 router.put('/wicket/:matchId', verifyJWT, isSportsHead, isValidMatch, controller.updateWickets);
+router.put('/bowler/:matchId', verifyJWT, isSportsHead, isValidMatch, controller.updateBowler);
+router.post('/over/:matchId', verifyJWT, isSportsHead, isValidMatch, controller.createOver);
 
 // router.delete('/delete/:matchId', verifyJWT, isSportsHead, isValidMatch, controller.deleteMatch);
 // export default router;

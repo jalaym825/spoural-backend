@@ -6,6 +6,8 @@ import userRoutes from './api/user/index';
 import forgotpassword from './api/forgotpassword/index'
 import ticketRouter from './api/ticket/index';
 import testRouter from './api/test/index'
+import swaggerUi from 'swagger-ui-express';
+const swaggerDocument  = require('../swagger-output.json');
 
 function routes(app: any) {
     app.use('/auth', authRouter);
@@ -16,6 +18,7 @@ function routes(app: any) {
     app.use('/forgotpassword',forgotpassword);
     app.use('/tickets', ticketRouter);
     app.use('/test', testRouter);
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 }
 
 export default routes;

@@ -9,7 +9,6 @@ import routes from './router';
 import swaggerUi from 'swagger-ui-express';
 import cookieParser from 'cookie-parser';
 import 'colors';
-const swaggerDocument  = require('../swagger-output.json');
 
 const app = express();
 const server = http.createServer(app);
@@ -32,9 +31,9 @@ const io = new Server(server, {
 
 io.on("connection", (socket) => {
     console.log(`user connected socketId: ${socket.id}`);
-    socket.on("sendNumber", data => {
+    socket.on("runsUpdated", data => {
         console.log(data)
-        socket.broadcast.emit("receiveNumber", data);
+        socket.broadcast.emit("updateRuns");
     })
     socket.on("disconnect", () => {
         console.log("user disconnected");
@@ -48,7 +47,6 @@ server.listen(port, () => {
     prisma.$connect().then(() => {
         console.log('Connected to database');
     })
-    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
     routes(app);
 });
 
