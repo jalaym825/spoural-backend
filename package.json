@@ -5,7 +5,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "swagger": "ts-node swagger.ts",
-    "start": "nodemon src/app.ts"
+    "start": "nodemon src/app.ts",
+    "build": "rimraf dist && tsc",
+    "ts.check": "tsc --project tsconfig.json",
+    "add-build": "git add dist"
   },
   "author": "",
   "license": "ISC",
@@ -25,6 +28,8 @@
     "nodemailer": "^6.9.8",
     "nodemon": "^3.0.2",
     "otp-generator": "^4.0.1",
+    "pre-commit": "^1.2.2",
+    "rimraf": "^5.0.5",
     "socket.io": "^4.7.3",
     "swagger-autogen": "^2.23.7",
     "swagger-jsdoc": "^6.2.8",
