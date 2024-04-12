@@ -8,7 +8,8 @@
     "build": "npx tsc",
     "start": "node dist/app.js",
     "dev": "nodemon src/app.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "vercel-build": "npx tsc"
   },
   "pre-commit": [
     "ts.check",
