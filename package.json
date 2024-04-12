@@ -1,14 +1,12 @@
 {
   "name": "sgp-2",
   "version": "1.0.0",
-  "main": "src/app.ts",
+  "main": "src/index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "swagger": "ts-node swagger.ts",
-    "build": "npx tsc",
-    "start": "node dist/app.js",
-    "dev": "nodemon src/app.ts",
-    "postinstall": "prisma generate",
+    "start": "nodemon src/index.ts",
+    "build": "rimraf dist && tsc",
     "ts.check": "tsc --project tsconfig.json",
     "add-build": "git add dist"
   },
