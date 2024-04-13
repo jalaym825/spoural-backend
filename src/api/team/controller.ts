@@ -4,6 +4,7 @@ import logger from '../../utils/logger';
 import { isValidEmail } from '../../utils/heplers';
 import axios from 'axios';
 import mailer from '../../utils/mailer';
+const config = require('../../../config.json');
 
 function generatePassword(length: number) {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -205,7 +206,7 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
                     password: generatePassword(6) // Add the 'password' property with a default value
                 }
             });
-            await axios.post(`${process.env.SERVER_URL}/auth/sendVerificationMail`, {
+            await axios.post(`${config.SERVER_URL}/auth/sendVerificationMail`, {
                 email: playerEmail
             });
         }

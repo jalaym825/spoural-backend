@@ -6,3 +6,4 @@ node_modules
 prisma/migrations
 prisma/generated
 # dist
+config.json

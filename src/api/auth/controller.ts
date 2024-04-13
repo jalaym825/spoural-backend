@@ -7,6 +7,7 @@ import axios from "axios";
 import crypto from "crypto";
 import nodemailer from "../../utils/mailer";
 import prisma from '../../utils/prisma';
+const config = require('../../../config.json');
 
 interface AuthenticatedRequest extends Request {
     user?: any
@@ -14,10 +15,10 @@ interface AuthenticatedRequest extends Request {
 
 // const genAccRefTokens = async (userId: any) => {
 //     try {
-//         const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET!, {
+//         const accessToken = jwt.sign({ userId }, config.JWT_SECRET!, {
 //             expiresIn: "15m",
 //         });
-//         const refreshToken = jwt.sign({ userId }, process.env.JWT_SECRET!, {
+//         const refreshToken = jwt.sign({ userId }, config.JWT_SECRET!, {
 //             expiresIn: "7d",
 //         });
 
@@ -39,7 +40,7 @@ interface AuthenticatedRequest extends Request {
 
 const generateToken = async (userId: any) => {
     try {
-        const token = jwt.sign({ userId }, process.env.JWT_SECRET!, {
+        const token = jwt.sign({ userId }, config.JWT_SECRET!, {
             expiresIn: "7d",
         });
 
@@ -115,7 +116,7 @@ const register = async (req: Request, res: Response) => {
         logger.info(`[/auth/register] - success - ${newUser.userId}`);
         logger.debug(`[/auth/register] - email: ${email}, userId: ${userId}`);
 
-        const res1 = await axios.post(`${process.env.SERVER_URL}/auth/sendVerificationMail`, {
+        const res1 = await axios.post(`${config.SERVER_URL}/auth/sendVerificationMail`, {
             email: email.toLowerCase()
         });
         if (res1.data.error) {
@@ -248,7 +249,7 @@ const sendVerificationMail = async (req: AuthenticatedRequest, res: Response) =>
         });
 
         // create env variable for frontend url
-        let link = `${process.env.SERVER_URL}/auth/verify/${tokenData.token}`;
+        let link = `${config.SERVER_URL}/auth/verify/${tokenData.token}`;
 
         nodemailer.sendMail([req.user.email], "Verify your email", {
             html: `<p>Click <a href="${link}">here</a> to verify your email</p>`,
@@ -409,7 +410,7 @@ const verify = async (req: Request, res: Response) => {
 //             });
 //         }
 
-//         const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET!) as JwtPayload;
+//         const decoded = jwt.verify(refreshToken, config.JWT_SECRET!) as JwtPayload;
 
 //         const user = await prisma.users.findUnique({
 //             where: {

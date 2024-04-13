@@ -8,6 +8,7 @@ import helmet from 'helmet';
 import routes from './router';
 import cookieParser from 'cookie-parser';
 import 'colors';
+const config = require('../config.json');
 
 const app = express();
 const server = http.createServer(app);
@@ -38,7 +39,7 @@ io.on("connection", (socket) => {
     });
 })
 
-const port = process.env.PORT || 3000;
+const port = config.PORT || 3000;
 
 server.listen(port, () => {
     console.log(`Listening on port ${port}`);
