@@ -5,7 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "swagger": "ts-node swagger.ts",
-    "start": "nodemon src/index.ts"
+    "start": "nodemon src/index.ts",
+    "build": "tsc -p ."
   },
   "pre-commit": [
     "ts.check",
