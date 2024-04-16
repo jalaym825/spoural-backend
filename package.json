@@ -8,11 +8,6 @@
     "start": "nodemon src/index.ts",
     "build": "tsc -p ."
   },
-  "pre-commit": [
-    "ts.check",
-    "build",
-    "add-build"
-  ],
   "author": "",
   "license": "ISC",
   "description": "",
