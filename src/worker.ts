@@ -33,7 +33,6 @@ export default function worker() {
   io.on("connection", (socket) => {
     console.log(`user connected socketId: ${socket.id}`);
     socket.on("runsUpdated", (match: any) => { 
-      console.log(match)
       socket.broadcast.emit("updateRuns", match);
     })
     socket.on("disconnect", () => {
