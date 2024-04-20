@@ -107,10 +107,17 @@ model CricketPlayer {
   bowling_score_player CricketMatchPlayerBowlingScore[] @relation("bowlingScoreMatchPlayer")
 }
 
+enum MatchStatus {
+  SCHEDULED
+  LIVE
+  COMPLETED
+}
+
 model CricketMatch {
-  sis_id String  @id @default(uuid())
+  sis_id String      @id @default(uuid())
   // matchId          String           @unique
-  played Boolean @default(false)
+  played Boolean     @default(false)
+  status MatchStatus @default(SCHEDULED)
 
   tossWonBy     String?
   tossWonByTeam CricketTeam? @relation("tossWinningTeam", fields: [tossWonBy], references: [sis_id])
@@ -262,6 +269,7 @@ model CricketMatchPlayerBowlingScore {
   sixes   Int     @default(0)
   played  Boolean @default(false)
   wickets Int     @default(0)
+  overs   Int     @default(0)
 
   playerId String?
   player   CricketPlayer? @relation("bowlingScoreMatchPlayer", fields: [playerId], references: [sis_id])

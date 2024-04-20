@@ -18,7 +18,7 @@ const verifyJWT = async (req: AuthenticatedRequest, res: Response, next: NextFun
     try {
         let payload: JwtPayload;
         try {
-            payload = await jwt.verify(token, config.JWT_SECRET!) as JwtPayload;
+            payload = await jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
         } catch (error: any) {
             logger.error(`[/team] - Invalid token: ${error.message}`);
             return res.status(401).json({

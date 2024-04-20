@@ -1,6 +1,5 @@
 import nodemailer from "nodemailer";
 import logger from "./logger";
-const config = require('../../config.json');
 
 interface body {
     html?: string;
@@ -8,7 +7,7 @@ interface body {
 }
 
 class Mailer {
-    from: string | undefined = config.GMAIL;
+    from: string | undefined = process.env.GMAIL;
     transporter: nodemailer.Transporter;
     constructor() {
         this.transporter = nodemailer.createTransport({
@@ -17,14 +16,15 @@ class Mailer {
             port: 587,
             secure: false,
             auth: {
-                user: config.GMAIL,
-                pass: config.GMAIL_KEY,
+                user: process.env.GMAIL,
+                pass: process.env.GMAIL_KEY,
             },
         });
         this.sendMail = this.sendMail.bind(this);
     }
 
     public async sendMail(to: Array<string>, subject: string, body: body) {
+        // return;
         return await this.transporter.sendMail({
             from: { name: "Spoural 2K24", address: 'jalay217@gmail.com' }, // sender address
             to: to, // list of receivers

@@ -58,7 +58,7 @@ const resetPassword = async (req: Request, res: Response) => {
         }
 
         await mailer.sendverifyotp(email, otp);
-        const otppayload = await prisma.OTP.create({ data: { email, otp } });
+        await prisma.OTP.create({ data: { email, otp } });
 
         logger.info(`[/forgotpassword/resetpassword - success]`)
         logger.debug(`[/forgotpassword/resetpassword - email:${email} , otp:${otp}]`);

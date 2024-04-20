@@ -1,32 +1,9 @@
 import { Request, Response } from 'express';
 import prisma from '../../utils/prisma';
 import logger from '../../utils/logger';
-import { isValidEmail } from '../../utils/heplers';
+import { getUserByRollNo, isValidEmail, generateName, generatePassword } from '../../utils/heplers';
 import axios from 'axios';
 import mailer from '../../utils/mailer';
-const config = require('../../../config.json');
-
-function generatePassword(length: number) {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-
-    for (let i = 0; i < length; i++) {
-        const randomIndex = Math.floor(Math.random() * characters.length);
-        result += characters.charAt(randomIndex);
-    }
-
-    return result;
-}
-
-function generateName() {
-    const adjectives = ['Brilliant', 'Spirited', 'Vibrant', 'Genuine', 'Harmonious'];
-    const nouns = ['Phoenix', 'Cascade', 'Horizon', 'Zenith', 'Whisper'];
-
-    const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
-    const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
-
-    return randomAdjective + randomNoun;
-}
 
 
 const getTeam = async (req: Request, res: Response) => {
@@ -177,7 +154,7 @@ interface AuthenticatedRequest extends Request {
 
 const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const { teamId, playerEmail, userId, playerCategory } = req.body;
+        let { teamId, playerEmail, userId, playerCategory, playerName } = req.body;
         if (!teamId || !playerEmail) {
             logger.warn(`[/team/player] - data missing`);
             logger.debug(`[/team/player] - teamId: ${teamId} playerEmail: ${playerEmail}`);
@@ -192,24 +169,30 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
                 error: "Invalid email"
             });
         }
+        if (!userId) {
+            userId = playerEmail.split("@")[0];
+        }
+
         let user = await prisma.users.findUnique({
             where: {
                 email: playerEmail
             }
         });
         if (!user) {
+            console.log(userId);
             user = await prisma.users.create({
                 data: {
                     userId,
                     email: playerEmail,
-                    name: generateName(), // Add the 'name' property with a default value
+                    name: userId ? await getUserByRollNo(userId) : generateName(), // Add the 'name' property with a default value
                     password: generatePassword(6) // Add the 'password' property with a default value
                 }
             });
-            await axios.post(`${config.SERVER_URL}/auth/sendVerificationMail`, {
+            await axios.post(`${process.env.SERVER_URL}/auth/sendVerificationMail`, {
                 email: playerEmail
             });
         }
+
         let player = await prisma.cricketPlayer.findUnique({
             where: {
                 userId
@@ -225,7 +208,6 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
                 error: "Player have already applied for the team selection"
             });
         }
-
         player = await prisma.cricketPlayer.create({
             data: {
                 teamId,
@@ -255,9 +237,9 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
                 players: true
             }
         });
-        await mailer.sendAppliedMail(playerEmail, team.name, user.rec_status);
+        mailer.sendAppliedMail(playerEmail, team.name, user.rec_status);
         logger.info(`[/team/player] - ${player.user.userId} added`);
-        return res.status(200).json({ team });
+        return res.status(200).json({ team, player });
     } catch (error: any) {
         logger.error(`[/team/player] - ${error.message}`);
         return res.status(500).json({
@@ -472,7 +454,7 @@ const sendSelectionMail = async (req: Request, res: Response) => {
             });
         }
         let emails = selectedPlayers.map((player: any) => player.user.email);
-        await mailer.sendSelectionMail(emails, team.name);
+        mailer.sendSelectionMail(emails, team.name);
         logger.info(`[/team/sendSelectionMail/:teamId] - mail sent to ${emails.length} players`);
         return res.status(200).json({ message: "Mail sent" });
     } catch (error: any) {

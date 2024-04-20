@@ -303,7 +303,7 @@ const startMatch = async (req: CustomRequest, res: Response) => {
 
         const match = await prisma.cricketMatch.update({
             where: { sis_id: req.match.sis_id },
-            data: { overs, overPerBowler, powerPlayOvers, tossWonBy: tossWonByTeamId, tossDecision, currentOverId: over.sis_id, played: true, teamAScoreId: req.match.teamAScore.sis_id, teamBScoreId: req.match.teamBScore.sis_id, battingTeamScoreId, bowlingTeamScoreId },
+            data: { status: "LIVE", overs, overPerBowler, powerPlayOvers, tossWonBy: tossWonByTeamId, tossDecision, currentOverId: over.sis_id, played: true, teamAScoreId: req.match.teamAScore.sis_id, teamBScoreId: req.match.teamBScore.sis_id, battingTeamScoreId, bowlingTeamScoreId },
             include: { teamAScore: true, teamBScore: true }
         });
 
@@ -446,9 +446,17 @@ const updateRuns = async (req: CustomRequest, res: Response) => {
             data: {
                 played: true,
                 balls: { increment: ["WIDE", "NO_BALL"].includes(ballType) ? 0 : 1 },
-                runs: { increment: ["LEG_BYE", "BYE"].includes(ballType) ? 0 : runs }
+                runs: { increment: ["LEG_BYE", "BYE"].includes(ballType) ? 0 : runs },
             }
         })
+
+        // increase over count in bowler table if match is over
+        if (over.validBalls === 6) {
+            await prisma.cricketMatchPlayerBowlingScore.update({
+                where: { sis_id: over.bowlerScoreId },
+                data: { overs: { increment: 1 } }
+            });
+        }
 
         const updatedPlayer = await prisma.cricketPlayer.update({
             where: { sis_id: over.strikerScore.playerId || "" },

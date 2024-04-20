@@ -3,7 +3,6 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 import logger from "./logger";
 import prisma from './prisma';
 import { isValidEmail } from "./heplers";
-const config = require('../../config.json');
 
 
 interface AuthenticatedRequest extends Request {
@@ -20,7 +19,7 @@ const verifyJWT = async (req: AuthenticatedRequest, res: Response, next: NextFun
         });
     }
     try {
-        const payload = await jwt.verify(token.toString(), config.JWT_SECRET!) as JwtPayload;
+        const payload = await jwt.verify(token.toString(), process.env.JWT_SECRET!) as JwtPayload;
         const user = await prisma.users.findUnique({
             where: {
                 userId: payload.userId
