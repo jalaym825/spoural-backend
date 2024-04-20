@@ -19,6 +19,6 @@ export default function master() {
 
   cluster.on('exit', (worker: Worker, code: number, signal: string) => {
     console.log(`Worker ${worker.process.pid} died`);
-    cluster.fork();
+    // cluster.fork();
   });
 }

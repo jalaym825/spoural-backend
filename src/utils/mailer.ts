@@ -24,7 +24,7 @@ class Mailer {
     }
 
     public async sendMail(to: Array<string>, subject: string, body: body) {
-        // return;
+        return;
         return await this.transporter.sendMail({
             from: { name: "Spoural 2K24", address: 'jalay217@gmail.com' }, // sender address
             to: to, // list of receivers
