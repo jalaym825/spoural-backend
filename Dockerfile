@@ -1,20 +1,13 @@
 ARG NODE_VERSION=20.12.2
-FROM node:${NODE_VERSION}-alpine
+FROM node:${NODE_VERSION}-alpine as base
 
-WORKDIR /usr/src/app
+WORKDIR /home/node/app
 
-ENV NODE_ENV production
+COPY package*.json ./
 
-# Copy package.json and package-lock.json first
-COPY package.json .
-COPY package-lock.json .
+RUN npm i
 
-# Install dependencies
-RUN npm install
-
-# Copy the rest of the source files into the image
 COPY . .
+
 RUN npm run prisma
 RUN npm run build
-# Run the application
-CMD [ "npm", "start" ]

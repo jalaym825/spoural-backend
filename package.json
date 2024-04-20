@@ -5,9 +5,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "swagger": "ts-node swagger.ts",
-    "start": "node dist/index.js",
     "build": "tsc -p .",
-    "prisma": "npx prisma db push"
+    "prisma": "prisma db push",
+    "start": "node dist/index.js"
   },
   "author": "",
   "license": "ISC",
@@ -20,7 +20,7 @@
     "cheerio": "^1.0.0-rc.12",
     "colors": "^1.4.0",
     "cookie-parser": "^1.4.6",
-    "express": "^4.18.2",
+    "express": "^4.19.2",
     "express-rate-limit": "^7.2.0",
     "helmet": "^7.1.0",
     "is-valid-email": "^0.0.5",
@@ -52,6 +52,7 @@
     "@types/otp-generator": "^4.0.2",
     "@types/socket.io": "^3.0.2",
     "@types/swagger-ui-express": "^4.1.6",
+    "rimraf": "^3.0.2",
     "typescript": "^5.3.3"
   }
 }

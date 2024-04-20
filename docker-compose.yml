@@ -1,0 +1,12 @@
+version: '3.7'
+
+services:
+  sgp-backend:
+    build:
+      context: .
+    container_name: sgp-backend
+    env_file:
+      - .env
+    ports:
+      - '${PORT}:${PORT}'
+    command: npm start
