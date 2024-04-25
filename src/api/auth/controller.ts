@@ -247,8 +247,7 @@ const sendVerificationMail = async (req: AuthenticatedRequest, res: Response) =>
             },
         });
 
-        // create env variable for frontend url
-        let link = `${process.env.SERVER_URL}/auth/verify/${tokenData.token}`;
+        let link = `${process.env.FRONTEND_SERVER_URL}/auth/verify/${tokenData.token}`;
 
         nodemailer.sendMail([req.user.email], "Verify your email", {
             html: `<p>Click <a href="${link}">here</a> to verify your email</p>`,
