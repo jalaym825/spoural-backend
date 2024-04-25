@@ -8,12 +8,16 @@ import { createAdapter } from "@socket.io/cluster-adapter";
 import routes from './router';
 import 'colors';
 import { PrismaClient } from '@prisma/client'; // Assuming you have prisma client installed
+import morgan from 'morgan';
+import fs from 'fs';
 
 export default function worker() {
   const prisma = new PrismaClient(); // Initialize prisma client
 
   const app = express();
   const server = http.createServer(app);
+
+  app.use(morgan("[:date[clf]] :method :url :status :res[content-length] - :response-time ms"));
 
   app.use(cors({
     origin: '*',
@@ -32,7 +36,7 @@ export default function worker() {
 
   io.on("connection", (socket) => {
     console.log(`user connected socketId: ${socket.id}`);
-    socket.on("runsUpdated", (match: any) => { 
+    socket.on("runsUpdated", (match: any) => {
       socket.broadcast.emit("updateRuns", match);
     })
     socket.on("disconnect", () => {
