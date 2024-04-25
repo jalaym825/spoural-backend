@@ -241,6 +241,7 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
         logger.info(`[/team/player] - ${player.user.userId} added`);
         return res.status(200).json({ team, player });
     } catch (error: any) {
+        console.log(error);
         logger.error(`[/team/player] - ${error.message}`);
         return res.status(500).json({
             error: error.message
