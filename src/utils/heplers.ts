@@ -13,7 +13,7 @@ function isValidEmail(email: string): boolean {
 async function getUserByRollNo(studentId: string): Promise<string> {
     try{
         const response = await axios.get(`${process.env.SERVER2_URL}/user/${studentId}`)
-        console.log(response)
+        console.log("response")
         return response.data.name;
     }catch(e) {
         console.log(e)
