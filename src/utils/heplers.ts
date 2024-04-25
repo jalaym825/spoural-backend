@@ -11,8 +11,14 @@ function isValidEmail(email: string): boolean {
 }
 
 async function getUserByRollNo(studentId: string): Promise<string> {
-    const response = await axios.get(`${process.env.SERVER2_URL}/user/${studentId}`)
-    return response.data.name;
+    try{
+        const response = await axios.get(`${process.env.SERVER2_URL}/user/${studentId}`)
+        console.log(response)
+        return response.data.name;
+    }catch(e) {
+        console.log(e)
+        throw new Error(e.response.data.error)
+    }
 }
 
 function generatePassword(length: number): string {
