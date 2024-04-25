@@ -11,7 +11,7 @@ function isValidEmail(email: string): boolean {
 }
 
 async function getUserByRollNo(studentId: string): Promise<string> {
-    const response = await axios.get(`${process.env.SERVER2_URL}/${studentId}`)
+    const response = await axios.get(`${process.env.SERVER2_URL}/user/${studentId}`)
     return response.data.name;
 }
 

@@ -9,7 +9,6 @@ import routes from './router';
 import 'colors';
 import { PrismaClient } from '@prisma/client'; // Assuming you have prisma client installed
 import morgan from 'morgan';
-import fs from 'fs';
 
 export default function worker() {
   const prisma = new PrismaClient(); // Initialize prisma client
