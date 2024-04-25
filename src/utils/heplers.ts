@@ -12,14 +12,7 @@ function isValidEmail(email: string): boolean {
 
 async function getUserByRollNo(studentId: string): Promise<string> {
     const response = await axios.get(`${process.env.SERVER2_URL}/${studentId}`)
-    const $ = load(response.data);
-    const studentName = $('#lblStudentName').text();
-    if(studentName === "") return generateName();
-    let fName = studentName.split(" ")[1].toLowerCase();
-    fName = fName.charAt(0).toUpperCase() + fName.slice(1);
-    let lName = studentName.split(" ")[0].toLowerCase();
-    lName = lName.charAt(0).toUpperCase() + lName.slice(1);
-    return fName + " " + lName;
+    return response.data.name;
 }
 
 function generatePassword(length: number): string {
