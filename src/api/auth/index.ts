@@ -1,6 +1,7 @@
 import controller from './controller';
 import { Router } from 'express';
 import ratelimit from 'express-rate-limit';
+import multer from 'multer';
 import { verifyJWT, isUser, isNotVerified, mailSent } from '../../utils/middleware';
 const router = Router();
 
@@ -18,6 +19,10 @@ router.post('/login', controller.login);
 // router.post('/refreshAccessToken', controller.refreshAccessToken);
 router.put('/logout', verifyJWT, controller.logout);
 router.get('/me', verifyJWT, controller.getUser);
+
+
+const upload = multer({ dest: 'uploads/' });
+router.post('/upload',  upload.single('image'), controller.uploadImage);
 
 // export default router;
 export default router;

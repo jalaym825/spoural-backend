@@ -32,6 +32,7 @@ model Users {
   email              String              @unique
   name               String?
   password           String?
+  imageUrl           String?
   token              String?
   roles              Role[]              @default([USER])
   createdAt          DateTime            @default(now())

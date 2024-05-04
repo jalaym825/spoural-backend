@@ -1,6 +1,6 @@
 require('events').EventEmitter.defaultMaxListeners = 15; // or a value appropriate for your application
 import { PrismaClient } from '@prisma/client';
-import express, {Request, Response} from 'express';
+import express, { Request, Response } from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
@@ -9,7 +9,10 @@ import routes from './router';
 import swaggerUi from 'swagger-ui-express';
 import cookieParser from 'cookie-parser';
 import 'colors';
-const swaggerDocument  = require('../swagger-output.json');
+const swaggerDocument = require('../swagger-output.json');
+
+
+
 
 const app = express();
 const server = http.createServer(app);
@@ -24,11 +27,13 @@ app.use(cookieParser());
 
 
 const io = new Server(server, {
-    cors:{
+    cors: {
         origin: "http://localhost:3001",
         methods: ["GET", "POST"]
     }
 });
+
+
 
 io.on("connection", (socket) => {
     console.log(`user connected socketId: ${socket.id}`);

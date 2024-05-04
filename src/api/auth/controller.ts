@@ -7,6 +7,7 @@ import axios from "axios";
 import crypto from "crypto";
 import nodemailer from "../../utils/mailer";
 import prisma from '../../utils/prisma';
+import { uploadoncloudinary } from "../../cloudinary/cloudinary";
 
 interface AuthenticatedRequest extends Request {
     user?: any
@@ -472,4 +473,31 @@ const getUser = async (req: AuthenticatedRequest, res: Response) => {
     }
 }
 
-export default { login, register, sendVerificationMail, logout, verify, getUser };
+const uploadImage = async (req: Request, res: Response) => {
+    try {
+        console.log("file is->",req.file)
+        if (!req.file) {
+            return res.status(400).json({
+                 error: 'No file uploaded'
+                 });
+        }
+        const result = await uploadoncloudinary(req.file.path);
+        if (!result) {
+            return res.status(500).json({
+                error: 'Failed to upload image to Cloudinary'
+            });
+        }
+
+        return res.status(200).json({
+            imageUrl: result.url
+        });
+
+    } catch (error) {
+        console.error('Error uploading image:', error);
+        return res.status(500).json({ 
+            error: 'Internal server error'
+         });
+    }
+};
+
+export default { login, register, sendVerificationMail, logout, verify, getUser, uploadImage };
