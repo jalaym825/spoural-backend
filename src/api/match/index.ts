@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import controller from './controller';
 import { isSportsHead, isValidMatch, verifyJWT } from '../../utils/middleware';
+import controller from './controller';
 const router = Router();
 
 router.get('/year/:year', controller.getMatches);
@@ -15,6 +15,10 @@ router.put('/runs/:matchId', verifyJWT, isSportsHead, isValidMatch, controller.u
 router.put('/wicket/:matchId', verifyJWT, isSportsHead, isValidMatch, controller.updateWickets);
 router.put('/bowler/:matchId', verifyJWT, isSportsHead, isValidMatch, controller.updateBowler);
 router.post('/over/:matchId', verifyJWT, isSportsHead, isValidMatch, controller.createOver);
+
+router.put('/:matchId/startSecondInning', verifyJWT, isSportsHead, isValidMatch, controller.startSecondInning);
+
+router.put('/:matchId/deleteLastBall', verifyJWT, isSportsHead, isValidMatch, controller.deleteLastBall);
 
 // router.delete('/delete/:matchId', verifyJWT, isSportsHead, isValidMatch, controller.deleteMatch);
 // export default router;

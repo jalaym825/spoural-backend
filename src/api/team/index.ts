@@ -1,6 +1,6 @@
-import controller from './controller';
 import { Router } from 'express';
-import { verifyJWT, isSportsHead } from '../../utils/middleware';
+import { isSportsHead, verifyJWT } from '../../utils/middleware';
+import controller from './controller';
 const router = Router();
 
 router.get('/year/:year', controller.getTeams);
@@ -14,6 +14,9 @@ router.get('/name/:name', controller.getTeamByName);
 
 // return all players applied for selection
 router.get('/:id/players', controller.getPlayers);
+
+// get playing xi players
+router.get('/:id/playingxi', controller.getPlayingXI);
 
 // add player to team
 router.put('/player', verifyJWT, controller.addPlayer);

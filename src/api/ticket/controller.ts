@@ -4,11 +4,7 @@ import logger from "../../utils/logger";
 import mailer from "../../utils/mailer"
 import { isValidEmail } from "../../utils/heplers";
 
-interface AuthenticatedRequest extends Request {
-    user?: any
-}
-
-const getTickets = async (req: AuthenticatedRequest, res: Response) => {
+const getTickets = async (req: Request, res: Response) => {
     try {
         const { page, limit, status } = req.query;
         if (!page || !limit) {
@@ -88,7 +84,7 @@ const createTicket = async (req: Request, res: Response) => {
     }
 }
 
-const reply = async (req: AuthenticatedRequest, res: Response) => {
+const reply = async (req: Request, res: Response) => {
     try {
 
         const { ticketId } = req.params;

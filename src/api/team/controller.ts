@@ -1,9 +1,9 @@
-import { Request, Response } from 'express';
-import prisma from '../../utils/prisma';
-import logger from '../../utils/logger';
-import { getUserByRollNo, isValidEmail, generateName, generatePassword } from '../../utils/heplers';
 import axios from 'axios';
+import { Request, Response } from 'express';
+import { generateName, generatePassword, getUserByRollNo, isValidEmail } from '../../utils/heplers';
+import logger from '../../utils/logger';
 import mailer from '../../utils/mailer';
+import prisma from '../../utils/prisma';
 
 
 const getTeam = async (req: Request, res: Response) => {
@@ -148,11 +148,7 @@ const addTeam = async (req: Request, res: Response) => {
     }
 }
 
-interface AuthenticatedRequest extends Request {
-    user?: any
-}
-
-const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
+const addPlayer = async (req: Request, res: Response) => {
     try {
         let { teamId, playerEmail, userId, playerCategory, playerName } = req.body;
         if (!teamId || !playerEmail) {
@@ -249,7 +245,7 @@ const addPlayer = async (req: AuthenticatedRequest, res: Response) => {
     }
 }
 
-const getPlayers = async (req: AuthenticatedRequest, res: Response) => {
+const getPlayers = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
         const selectedPlayers = req.query.selectedPlayers === 'true';
@@ -488,7 +484,7 @@ const getScoreCard = async (req: Request, res: Response) => {
                 error: "Team not found"
             });
         }
-        const scoreCard = await prisma.cricketTeamMatchData.findUnique({
+        const scoreCard = await prisma.cricketMatchTeamData.findUnique({
             where: {
                 teamId_matchId: {
                     teamId, matchId
@@ -640,4 +636,46 @@ const getBowlingScore = async (req: Request, res: Response) => {
     }
 }
 
-export default { getTeams, addTeam, addPlayer, getTeam, getPlayers, getTeamByName, selectPlayer, removePlayer, sendSelectionMail, getScoreCard, getBattingScore, getBowlingScore }
+const getPlayingXI = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        if (!id) {
+            logger.warn(`[/team/:id/playingxi] - data missing`);
+            logger.debug(`[/team/:id/playingxi] - id: ${id}`);
+            return res.status(400).json({
+                error: "Invalid id"
+            });
+        }
+        const team = await prisma.cricketTeam.findFirst({
+            where: {
+                sis_id: id
+            },
+            select: {
+                players: {
+                    where: {
+                        isSelected: true
+                    },
+                    include: {
+                        user: true
+                    }
+                }
+            }
+        });
+        if (!team) {
+            logger.warn(`[/team/:id/playingxi] - team not found`);
+            logger.debug(`[/team/:id/playingxi] - id: ${id}`);
+            return res.status(404).json({
+                error: "Team not found"
+            });
+        }
+        logger.info(`[/team/:id/playingxi] - ${team.players.length} players found`);
+        return res.status(200).json({ players: team.players });
+    } catch (error: any) {
+        logger.error(`[/team/:id/playingxi] - ${error.message}`);
+        return res.status(500).json({
+            error: error.message
+        });
+    }
+}
+
+export default { getTeams, addTeam, addPlayer, getTeam, getPlayers, getTeamByName, selectPlayer, removePlayer, sendSelectionMail, getScoreCard, getBattingScore, getBowlingScore, getPlayingXI }

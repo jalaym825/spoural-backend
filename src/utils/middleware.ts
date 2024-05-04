@@ -5,11 +5,7 @@ import prisma from './prisma';
 import { isValidEmail } from "./heplers";
 
 
-interface AuthenticatedRequest extends Request {
-    user?: any
-    match?: any
-}
-const verifyJWT = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+const verifyJWT = async (req: Request, res: Response, next: NextFunction) => {
     const token = req.cookies?.token || req.header("Authorization")?.split(" ")[1];
     if (!token) {
         logger.warn(`[/middleware/verifyJWT] - token missing`);
@@ -43,9 +39,9 @@ const verifyJWT = async (req: AuthenticatedRequest, res: Response, next: NextFun
     }
 }
 
-const isSportsHead = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+const isSportsHead = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        logger.debug(`[/middleware/isSportsHead] - user: ${req.user.userId}, role: ${req.user.role}`);
+        logger.debug(`[/middleware/isSportsHead] - user: ${req.user.userId}, role: ${req.user.roles}`);
         if (!req.user.roles.includes('SPORTS_HEAD')) {
             logger.warn(`[/middleware/isSportsHead] - unauthorized access by user: ${req.user.userId}`);
             return res.status(401).json({
@@ -62,7 +58,7 @@ const isSportsHead = async (req: AuthenticatedRequest, res: Response, next: Next
     }
 }
 
-const isUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+const isUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { email, userId } = req.body;
         if (!email && !userId) {
@@ -111,10 +107,10 @@ const isUser = async (req: AuthenticatedRequest, res: Response, next: NextFuncti
     }
 }
 
-const isNotVerified = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+const isNotVerified = async (req: Request, res: Response, next: NextFunction) => {
     try {
         logger.debug(`[/middleware/iseNotVerified] - user: ${req.user.userId}.`);
-        if (req.user.isVerified) {
+        if (req.user.rec_status === true) {
             logger.warn(`[/middleware/iseNotVerified] - user: ${req.user.userId} is already verified`);
             return res.status(400).json({
                 error: 'User is already verified.'
@@ -130,7 +126,7 @@ const isNotVerified = async (req: AuthenticatedRequest, res: Response, next: Nex
     }
 }
 
-const mailSent = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+const mailSent = async (req: Request, res: Response, next: NextFunction) => {
     try {
         let tokenData = await prisma.verificationToken.findUnique({
             where: {
@@ -155,7 +151,7 @@ const mailSent = async (req: AuthenticatedRequest, res: Response, next: NextFunc
     }
 }
 
-const isValidMatch = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+const isValidMatch = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { matchId } = req.params;
         const match = await prisma.cricketMatch.findUnique({
@@ -163,6 +159,27 @@ const isValidMatch = async (req: AuthenticatedRequest, res: Response, next: Next
             include: {
                 teamAScore: true,
                 teamBScore: true,
+                battingTeamScore: true,
+                bowlingTeamScore: true,
+                currentOver: {
+                    include: {
+                        strikerScore: {
+                            include: {
+                                player: true
+                            }
+                        },
+                        nonStrikerScore: {
+                            include: {
+                                player: true
+                            }
+                        },
+                        bowlerScore: {
+                            include: {
+                                player: true
+                            }
+                        },
+                    }
+                },
             }
         })
         if (!match) {
@@ -180,23 +197,23 @@ const isValidMatch = async (req: AuthenticatedRequest, res: Response, next: Next
     }
 }
 
-const isMatchPlayed = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+const isMatchPlayed = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (!req.match) {
             logger.warn(`[/middleware/isMatchPlayed] - match not found`);
-            logger.debug(`[/middleware/isMatchPlayed] - matchId: ${req.match.matchId}`);
+            logger.debug(`[/middleware/isMatchPlayed] - matchId: ${req.match.sis_id}`);
             return res.status(404).json({ error: 'Match not found' })
         }
         if (!req.match.played) {
             logger.warn(`[/middleware/isMatchPlayed] - match not played yet`);
-            logger.debug(`[/middleware/isMatchPlayed] - matchId: ${req.match.matchId}`);
+            logger.debug(`[/middleware/isMatchPlayed] - matchId: ${req.match.sis_id}`);
             return res.status(400).json({ error: 'Match not played' })
         }
         next();
     } catch (error: any) {
         logger.error(`[/middleware/isMatchPlayed] - ${error.message}`);
         return res.status(500).json({
-            error: `While checking if match: ${req.match.matchId} is played`
+            error: `While checking if match: ${req.match.sis_id} is played`
         });
     }
 }

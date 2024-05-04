@@ -1,16 +1,13 @@
-import { Request, Response } from "express";
-import logger from "../../utils/logger";
-import { isValidEmail } from "../../utils/heplers";
-import bcrypt from "bcrypt";
-import jwt, { JwtPayload } from 'jsonwebtoken';
 import axios from "axios";
+import bcrypt from "bcrypt";
 import crypto from "crypto";
+import { Request, Response } from "express";
+import jwt from 'jsonwebtoken';
+import { isValidEmail } from "../../utils/heplers";
+import logger from "../../utils/logger";
 import nodemailer from "../../utils/mailer";
 import prisma from '../../utils/prisma';
 
-interface AuthenticatedRequest extends Request {
-    user?: any
-}
 
 // const genAccRefTokens = async (userId: any) => {
 //     try {
@@ -115,6 +112,9 @@ const register = async (req: Request, res: Response) => {
         logger.info(`[/auth/register] - success - ${newUser.userId}`);
         logger.debug(`[/auth/register] - email: ${email}, userId: ${userId}`);
 
+        delete newUser.password;
+        delete newUser.token;
+
         const res1 = await axios.post(`${process.env.SERVER_URL}/auth/sendVerificationMail`, {
             email: email.toLowerCase()
         });
@@ -192,11 +192,6 @@ const login = async (req: Request, res: Response) => {
         delete _user.password;
         delete _user.refreshToken;
 
-        const options = {
-            httpOnly: true,
-            secure: true
-        }
-
         return res.status(200)
             // .cookie("accessToken", accessToken, options)
             // .cookie("refreshToken", refreshToken, options)
@@ -215,7 +210,7 @@ const login = async (req: Request, res: Response) => {
     }
 }
 
-const sendVerificationMail = async (req: AuthenticatedRequest, res: Response) => {
+const sendVerificationMail = async (req: Request, res: Response) => {
     try {
         const secretToken = crypto.randomBytes(32).toString("hex");
         let tokenData = await prisma.verificationToken.findUnique({
@@ -303,10 +298,6 @@ const logout = async (req: Request, res: Response) => {
             }
         });
         logger.info(`[/auth/logout] - success - ${user.userId}`);
-        const options = {
-            httpOnly: true,
-            secure: true
-        }
         return res.status(200)
             .json({
                 message: "User logged out successfully",
@@ -458,8 +449,10 @@ const verify = async (req: Request, res: Response) => {
 //     }
 // }
 
-const getUser = async (req: AuthenticatedRequest, res: Response) => {
+const getUser = async (req: Request, res: Response) => {
     try {
+        delete req.user.password;
+        delete req.user.token;
         return res.status(200).json({
             user: req.user
         })
@@ -471,4 +464,36 @@ const getUser = async (req: AuthenticatedRequest, res: Response) => {
     }
 }
 
-export default { login, register, sendVerificationMail, logout, verify, getUser };
+const uploadImage = async (req: Request, res: Response) => {
+    try {
+        const imageUrl = req.body.imageUrl;
+        if (!imageUrl) {
+            return res.status(400).json({
+                error: "Please provide image url"
+            });
+        }
+        const user = await prisma.users.update({
+            where: {
+                userId: req.user.userId
+            },
+            data: {
+                imageUrl: imageUrl
+            }
+        });
+
+        delete user.token;
+        delete user.password;
+
+        return res.status(200).json({
+            user
+        });
+
+    } catch (error) {
+        console.error('Error uploading image:', error);
+        return res.status(500).json({
+            error: 'Internal server error'
+        });
+    }
+};
+
+export default { login, register, sendVerificationMail, logout, verify, getUser, uploadImage };

@@ -1,7 +1,8 @@
-import controller from './controller';
 import { Router } from 'express';
 import ratelimit from 'express-rate-limit';
-import { verifyJWT, isUser, isNotVerified, mailSent } from '../../utils/middleware';
+import { isNotVerified, isUser, mailSent, verifyJWT } from '../../utils/middleware';
+import controller from './controller';
+
 const router = Router();
 
 const verificationMailLimiter = ratelimit({
@@ -18,6 +19,8 @@ router.post('/login', controller.login);
 // router.post('/refreshAccessToken', controller.refreshAccessToken);
 router.put('/logout', verifyJWT, controller.logout);
 router.get('/me', verifyJWT, controller.getUser);
+
+router.post('/upload', verifyJWT, controller.uploadImage);
 
 // export default router;
 export default router;

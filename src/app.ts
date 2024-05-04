@@ -1,16 +1,17 @@
-import express, { Request, Response } from 'express';
-import http from 'http';
-import { Server } from 'socket.io';
-import cors from 'cors';
-import helmet from 'helmet';
-import cookieParser from 'cookie-parser';
-import { createAdapter } from "@socket.io/cluster-adapter";
-import routes from './router';
-import 'colors';
 import { PrismaClient } from '@prisma/client'; // Assuming you have prisma client installed
+import { createAdapter } from "@socket.io/cluster-adapter";
+import 'colors';
+import cookieParser from 'cookie-parser';
+import cors from 'cors';
+import express, { Request, Response } from 'express';
+import helmet from 'helmet';
+import http from 'http';
 import morgan from 'morgan';
+import { Server } from 'socket.io';
+import routes from './router';
+import './types';
 
-export default function worker() {
+export default function app() {
   const prisma = new PrismaClient(); // Initialize prisma client
 
   const app = express();
