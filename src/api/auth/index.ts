@@ -19,6 +19,7 @@ router.post('/login', controller.login);
 // router.post('/refreshAccessToken', controller.refreshAccessToken);
 router.put('/logout', verifyJWT, controller.logout);
 router.get('/me', verifyJWT, controller.getUser);
+router.get('/me', verifyJWT, controller.getUser);
 
 router.post('/upload', verifyJWT, controller.uploadImage);
 
